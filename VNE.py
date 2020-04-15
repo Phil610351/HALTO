@@ -8,16 +8,23 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 def index():
 	req = request.get_json()
 	print(req)
+	value[req['instance']]=req['data']
 	global route
 	route.delete("all")
-	route.create_text(760,130,text=req['data'],font=('Arial', 32))
+	route.create_text(200,100,text=value[0],font=('Arial', 16))
+	route.create_oval( 150, 50, 250, 150, width = 3 )
+	route.create_text(700,100,text=value[1],font=('Arial', 16))
+	route.create_oval( 650, 50, 750, 150, width = 3 )
+	route.create_text(450,500,text=value[2],font=('Arial', 16))
+	route.create_oval( 400, 450, 500, 550, width = 3 )
 	return 'Ok'
 def draw():
 	global route
 	root = Tk()
-	route = Canvas(root,width=1000, height=720)
+	route = Canvas(root,width=900, height=600)
 	route.pack()
 	root.mainloop()
+value=['0']*3
 if __name__ == '__main__':
 	Thread(target = draw).start()
 	app.debug = True
