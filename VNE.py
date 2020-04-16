@@ -16,16 +16,15 @@ def sockeeet():
 	print(req)
 	value[req['instance']]=req['data']
 	global route
-	print(1)
-	route.delete("all")
-	print(2)
-	route.create_text(200,100,text=req['data'],font=('Arial', 16))
-	route.create_oval( 150, 50, 250, 150, width = 3 )
-	route.create_text(700,100,text=req['data'],font=('Arial', 16))
-	route.create_oval( 650, 50, 750, 150, width = 3 )
-	route.create_text(450,500,text=req['data'],font=('Arial', 16))
-	route.create_oval( 400, 450, 500, 550, width = 3 )
-	print('done')
+	if req['instance']==0:
+		route.delete(a)
+		a=route.create_text(200,100,text=req['data'],font=('Arial', 16))
+	if req['instance']==1:
+		route.delete(b)
+		b=route.create_text(700,100,text=req['data'],font=('Arial', 16))
+	if req['instance']==2:
+		route.delete(c)
+		c=route.create_text(450,500,text=req['data'],font=('Arial', 16))
 	return '200 OK'
 
 def draw():
@@ -33,6 +32,13 @@ def draw():
 	root = Tk()
 	route = Canvas(root,width=900, height=600)
 	route.pack()
+
+	a=route.create_text(200,100,text='0',font=('Arial', 16))
+	route.create_oval( 150, 50, 250, 150, width = 3 )
+	b=route.create_text(700,100,text='0',font=('Arial', 16))
+	route.create_oval( 650, 50, 750, 150, width = 3 )
+	c=route.create_text(450,500,text='0',font=('Arial', 16))
+	route.create_oval( 400, 450, 500, 550, width = 3 )	
 	root.mainloop()
 
 def gen_task():
