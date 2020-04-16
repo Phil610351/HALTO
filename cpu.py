@@ -14,7 +14,9 @@ def sockeeet():
 	req=request.get_json()
 	print(req)
 	def computing():
-		os.system("stress-ng -c 0 -l "+str(req['data'])+' --timout 5')	
+		command="stress-ng -c 0 -l "+str(req['data'])+' --timout 5'
+		print(command)
+		os.system(command)
 	Thread(target=computing).start()
 	i=0
 	while i<5:
