@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
+from threading import Thread
 import requests
 import json
 import os
@@ -12,7 +13,9 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 def sockeeet():
 	req=request.get_json()
 	print(req)
-	os.system("stress-ng -c 0 -l "+str(req['data'])+' --timout 5')	
+	def computing():
+		os.system("stress-ng -c 0 -l "+str(req['data'])+' --timout 5')	
+	Thread(target=computing).start()
 	i=0
 	while i<5:
 		os.system("sar 1 1 >output.txt")
