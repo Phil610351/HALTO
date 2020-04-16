@@ -33,9 +33,6 @@ def draw():
 	root = Tk()
 	route = Canvas(root,width=900, height=600)
 	route.pack()
-	Thread(target=gen_task).start()
-	root.mainloop()
-
 	def gen_task():
 		while 1:
 			time.sleep(5)
@@ -59,7 +56,8 @@ def draw():
 			r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
 			#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
 			#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
-
+	Thread(target=gen_task).start()
+	root.mainloop()
 value=['0']*3
 if __name__ == '__main__':
 	Thread(target=draw).start()
