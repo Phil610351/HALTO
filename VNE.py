@@ -37,25 +37,25 @@ def draw():
 	
 def gen_task():
 	while 1:
-	time.sleep(5)
-	load=[0]*3
-	task=list()
-	for i in range(np.random.randint(2,6)):	task.append(np.random.poisson(20))
-	task.sort()
-	index=0
-	for e in task:
-		while 1:
-			if index>2:
-				index=0
-			if load[index]<100:
-				load[index]+=e
-				index+=1
-				break
-			else:
-				index+=1
-	r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
-	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
-	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
+		time.sleep(5)
+		load=[0]*3
+		task=list()
+		for i in range(np.random.randint(2,6)):	task.append(np.random.poisson(20))
+		task.sort()
+		index=0
+		for e in task:
+			while 1:
+				if index>2:
+					index=0
+				if load[index]<100:
+					load[index]+=e
+					index+=1
+					break
+				else:
+					index+=1
+		r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
+		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
+		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
 
 value=['0']*3
 if __name__ == '__main__':
