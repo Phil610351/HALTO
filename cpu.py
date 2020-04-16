@@ -22,12 +22,12 @@ def sockeeet():
 	while i<5:
 		os.system("sar 1 1 >output.txt")
 		with open("output.txt") as f:
-			data=f.read()[-58:54]
-			print(data)
+			data=f.read()[-56:-51]
 			cpu_data={'data':data}
 			print(cpu_data)
 			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data))
 		i+=1
+		print(i)
 
 if __name__ == '__main__':
 	app.debug = True
