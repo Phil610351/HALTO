@@ -9,6 +9,7 @@ import time
 headers = {'Content-Type': 'application/json'}
 app = Flask(__name__)
 cors = CORS(app, resources={r"/": {"origins": "*"}})
+
 @app.route('/',methods=['POST'])
 def sockeeet():
 	req = request.get_json()
@@ -52,8 +53,8 @@ def gen_task(event):
 				index+=1
 	print(sum(task))
 	r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
-	r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
-	r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
+	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
+	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
 
 value=['0']*3
 if __name__ == '__main__':
