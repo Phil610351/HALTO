@@ -12,7 +12,7 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 def sockeeet():
 	req=request.get_json()
 	print(req)
-	os.system("stress-ng -c 0 -l "+str(req['data']))	
+	os.system("stress-ng -c 0 -l "+str(req['data'])+' --timout 5')	
 	i=0
 	while i<5:
 		os.system("sar 1 1 >output.txt")
@@ -21,6 +21,7 @@ def sockeeet():
 			print(cpu_data)
 			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data))
 		i+=1
+
 if __name__ == '__main__':
 	app.debug = True
 	app.run(port=12345)
