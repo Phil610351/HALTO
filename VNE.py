@@ -16,24 +16,27 @@ def sockeeet():
 	print(req)
 	#value[req['instance']]=req['data']
 	global route
+	print(1)
 	route.delete("all")
+	print(2)
 	route.create_text(200,100,text=req['data'],font=('Arial', 16))
 	route.create_oval( 150, 50, 250, 150, width = 3 )
 	route.create_text(700,100,text=req['data'],font=('Arial', 16))
 	route.create_oval( 650, 50, 750, 150, width = 3 )
 	route.create_text(450,500,text=req['data'],font=('Arial', 16))
 	route.create_oval( 400, 450, 500, 550, width = 3 )
-	return 'OK'
+	print('done')
+	return '200 OK'
+
 def draw():
 	global route
 	root = Tk()
 	route = Canvas(root,width=900, height=600)
 	route.pack()
-	route.bind( "<Button-1>", gen_task)
+	#route.bind( "<Button-1>", gen_task)
 	root.mainloop()
 
-def gen_task(event):
-	print('ya')
+def gen_task():
 	load=[0]*3
 	task=list()
 	for i in range(np.random.randint(2,6)):
@@ -51,7 +54,6 @@ def gen_task(event):
 				break
 			else:
 				index+=1
-	print(sum(task))
 	r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
 	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
 	#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
