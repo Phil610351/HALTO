@@ -23,7 +23,7 @@ def sockeeet():
 	route.create_oval( 650, 50, 750, 150, width = 3 )
 	route.create_text(450,500,text=req['data'],font=('Arial', 16))
 	route.create_oval( 400, 450, 500, 550, width = 3 )
-	return 'Ok'
+	return 'OK'
 def draw():
 	global route
 	root = Tk()

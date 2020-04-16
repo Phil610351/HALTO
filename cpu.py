@@ -25,10 +25,12 @@ def sockeeet():
 			data=f.read()[-56:-51]
 			cpu_data={'data':data}
 			print(cpu_data)
-			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data))
+			print(1)
+			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data), timeout=None)
+			time.sleep(1)
+			print(2)
 		i+=1
-		print(i)
-
+		print(3)
 if __name__ == '__main__':
 	app.debug = True
 	app.run(port=12345)
