@@ -14,7 +14,7 @@ cors = CORS(app, resources={r"/": {"origins": "*"}})
 def sockeeet():
 	req = request.get_json()
 	print(req)
-	#value[req['instance']]=req['data']
+	value[req['instance']]=req['data']
 	global route
 	print(1)
 	route.delete("all")
@@ -34,7 +34,7 @@ def draw():
 	route = Canvas(root,width=900, height=600)
 	route.pack()
 	root.mainloop()
-	
+
 def gen_task():
 	while 1:
 		time.sleep(5)
@@ -54,7 +54,7 @@ def gen_task():
 				else:
 					index+=1
 		r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
-		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[1]}))
+		r=requests.request('POST','http://140.112.20.183:12345', headers=headers, data=json.dumps({'data':task[1]}))
 		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
 
 value=['0']*3
