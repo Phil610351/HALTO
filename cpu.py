@@ -15,21 +15,20 @@ def sockeeet():
 	print(req)
 	def computing():
 		command="stress-ng -c 0 -l "+str(req['data'])+' --timeout 5'
-		print(command)
 		os.system(command)
+	def writing():
+		os.system("sar 1 5 >output.txt")
 	Thread(target=computing).start()
+	Thread(target=writing).start()	
 	i=0
 	while i<5:
-		os.system("sar 1 1 >output.txt")
 		with open("output.txt") as f:
 			cpu_data={'data':f.read()[-56:-51]}
 			print(cpu_data)
-			print(1)
-			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data),timeout=None)
+			r=requests.request('POST','http://127.0.0.1:5000', headers=headers, data=json.dumps(cpu_data))
 			time.sleep(1)
-			print(2)
 		i+=1
-		print(3)
+		print(i)
 if __name__ == '__main__':
 	app.debug = True
 	app.run(port=12345)
