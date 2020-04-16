@@ -16,6 +16,9 @@ def sockeeet():
 	print(req)
 	value[req['instance']]=req['data']
 	global route
+	global a
+	global b
+	global c
 	if req['instance']==0:
 		route.delete(a)
 		a=route.create_text(200,100,text=req['data'],font=('Arial', 16))
@@ -32,7 +35,9 @@ def draw():
 	root = Tk()
 	route = Canvas(root,width=900, height=600)
 	route.pack()
-
+	global a
+	global b
+	global c
 	a=route.create_text(200,100,text='0',font=('Arial', 16))
 	route.create_oval( 150, 50, 250, 150, width = 3 )
 	b=route.create_text(700,100,text='0',font=('Arial', 16))
