@@ -47,7 +47,7 @@ def draw():
 	route.create_oval( 400, 450, 500, 550, width = 3 )	
 	root.mainloop()
 
-def gen_task():
+def gen_task(event):
 	#time.sleep(5)
 	load=[0]*3
 	task=list()
@@ -71,6 +71,5 @@ def gen_task():
 value=['0']*3
 if __name__ == '__main__':
 	Thread(target=draw).start()
-	Thread(target=gen_task).start()
 	app.debug = True
 	app.run()
