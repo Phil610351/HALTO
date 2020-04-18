@@ -21,30 +21,30 @@ def sockeeet():
 	global c
 	if req['instance']==0:
 		route.delete(a)
-		a=route.create_text(200,100,text=req['data'],font=('Arial', 16))
-	if req['instance']==1:
+		a=route.create_text(100,100,text=req['data'],font=('Arial', 16))
+	elif req['instance']==1:
 		route.delete(b)
-		b=route.create_text(700,100,text=req['data'],font=('Arial', 16))
-	if req['instance']==2:
+		b=route.create_text(600,100,text=req['data'],font=('Arial', 16))
+	elif req['instance']==2:
 		route.delete(c)
-		c=route.create_text(450,500,text=req['data'],font=('Arial', 16))
+		c=route.create_text(350,500,text=req['data'],font=('Arial', 16))
 	return '200 OK'
 
 def draw():
 	global route
 	root = Tk()
-	route = Canvas(root,width=900, height=600)
+	route = Canvas(root,width=1000, height=600)
 	route.pack()
 	route.bind( "<Button-1>", gen_task)
 	global a
 	global b
 	global c
-	a=route.create_text(200,100,text='0',font=('Arial', 16))
-	route.create_oval( 150, 50, 250, 150, width = 3 )
-	b=route.create_text(700,100,text='0',font=('Arial', 16))
-	route.create_oval( 650, 50, 750, 150, width = 3 )
-	c=route.create_text(450,500,text='0',font=('Arial', 16))
-	route.create_oval( 400, 450, 500, 550, width = 3 )	
+	a=route.create_text(100,100,text='0',font=('Arial', 16))
+	route.create_oval( 50, 50, 150, 150, width = 3 )
+	b=route.create_text(600,100,text='0',font=('Arial', 16))
+	route.create_oval( 550, 50, 650, 150, width = 3 )
+	c=route.create_text(350,500,text='0',font=('Arial', 16))
+	route.create_oval( 300, 450, 400, 550, width = 3 )
 	root.mainloop()
 
 def gen_task(event):
@@ -52,6 +52,10 @@ def gen_task(event):
 		load=[0]*3
 		task=list()
 		for i in range(np.random.randint(2,6)):	task.append(np.random.poisson(20))
+		text=''
+		route.create_text( 850,50,text='Task:',font=('Arial', 16))
+		for i in range(len(task)):
+			route.create_text( 850,75+20*i,text='Subtask'+str(i+1)+' : '+str(task[i])+'%CPU',font=('Arial', 12))
 		task.sort()
 		index=0
 		for e in task:
@@ -62,10 +66,9 @@ def gen_task(event):
 					load[index]+=e
 					index+=1
 					break
-				else:
-					index+=1
-		r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[0]}))
-		r=requests.request('POST','http://140.112.20.183:12345', headers=headers, data=json.dumps({'data':task[1]}))
+				else:	index+=1
+		r=requests.request('POST','http://192.168.43.170:11111', headers=headers, data=json.dumps({'data':task[0]}))
+		#r=requests.request('POST','http://192.168.43.170:22222', headers=headers, data=json.dumps({'data':task[1]}))
 		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
 	Thread(target=gen).start()
 
@@ -73,4 +76,4 @@ value=['0']*3
 if __name__ == '__main__':
 	Thread(target=draw).start()
 	app.debug = True
-	app.run()
+	app.run(host='0.0.0.0')
