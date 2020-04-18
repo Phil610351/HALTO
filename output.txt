@@ -1,5 +1,0 @@
-Linux 4.15.0-88-generic (user-System-Product-Name) 	2020年04月16日 	_x86_64_	(12 CPU)
-
-20時04分34秒     CPU     %user     %nice   %system   %iowait    %steal     %idle
-20時04分35秒     all     25.19      0.00      1.35      0.00      0.00     73.46
-平均時間：     all     25.19      0.00      1.35      0.00      0.00     73.46
