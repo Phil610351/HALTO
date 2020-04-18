@@ -68,7 +68,7 @@ def gen_task(event):
 					break
 				else:	index+=1
 		r=requests.request('POST','http://192.168.43.170:11111', headers=headers, data=json.dumps({'data':task[0]}))
-		#r=requests.request('POST','http://192.168.43.170:22222', headers=headers, data=json.dumps({'data':task[1]}))
+		r=requests.request('POST','http://192.168.43.170:22222', headers=headers, data=json.dumps({'data':task[1]}))
 		#r=requests.request('POST','http://127.0.0.1:12345', headers=headers, data=json.dumps({'data':task[2]}))
 	Thread(target=gen).start()
 
