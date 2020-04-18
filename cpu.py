@@ -1,5 +1,4 @@
 from flask import Flask, request
-from flask_cors import CORS
 from threading import Thread
 import requests
 import json
@@ -8,7 +7,6 @@ import numpy as np
 import time
 headers = {'Content-Type': 'application/json'}
 app = Flask(__name__)
-cors = CORS(app, resources={r"/": {"origins": "*"}})
 
 @app.route('/',methods=['POST'])
 def sockeeet():
