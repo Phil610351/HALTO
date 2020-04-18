@@ -32,10 +32,10 @@ def sockeeet():
 		a=route.create_text(100,100,text='0',font=('Arial', 16))
 		b=route.create_text(100,100,text='0',font=('Arial', 16))
 		c=route.create_text(100,100,text='0',font=('Arial', 16))
-	global d
-	for e in d:
-		route.delete(e)
-	d=list()		
+		global d
+		for e in d:
+			route.delete(e)
+		d=list()		
 	return '200 OK'
 
 def draw():
@@ -84,7 +84,7 @@ def gen_task(event):
 	Thread(target=node2).start()
 
 d=list()
-value=[0]*3
+value=[0]*4
 if __name__ == '__main__':
 	Thread(target=draw).start()
 	app.debug = True

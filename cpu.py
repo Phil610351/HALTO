@@ -24,7 +24,7 @@ def sockeeet():
 			r=requests.request('POST','http://192.168.43.101:5000', headers=headers, data=json.dumps(cpu_data))
 			time.sleep(1)
 		i+=1
-	r=requests.request('POST','http://192.168.43.101:5000', headers=headers, data=json.dumps({'instance':3}))
+	r=requests.request('POST','http://192.168.43.101:5000', headers=headers, data=json.dumps({'instance':3,'data':0}))
 if __name__ == '__main__':
 	def writing():	os.system("sar 1 >output.txt")
 	Thread(target=writing).start()
