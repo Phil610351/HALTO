@@ -29,9 +29,12 @@ def sockeeet():
 		route.delete(c)
 		c=route.create_text(350,500,text=req['data'],font=('Arial', 16))
 	else:
+		route.delete(a)
+		route.delete(b)
+		route.delete(c)			
 		a=route.create_text(100,100,text='0',font=('Arial', 16))
-		b=route.create_text(100,100,text='0',font=('Arial', 16))
-		c=route.create_text(100,100,text='0',font=('Arial', 16))
+		b=route.create_text(600,100,text='0',font=('Arial', 16))
+		c=route.create_text(350,500,text='0',font=('Arial', 16))
 		global d
 		for e in d:
 			route.delete(e)
@@ -79,9 +82,9 @@ def gen_task(event):
 				break
 			else:	index+=1
 	def node1():	r=requests.request('POST','http://192.168.43.170:11111', headers=headers, data=json.dumps({'data':task[0]}))
-	def node2():	r=requests.request('POST','http://192.168.43.2:11111', headers=headers, data=json.dumps({'data':task[1]}))
+	#def node2():	r=requests.request('POST','http://192.168.43.2:11111', headers=headers, data=json.dumps({'data':task[1]}))
 	Thread(target=node1).start()
-	Thread(target=node2).start()
+	#Thread(target=node2).start()
 
 d=list()
 value=[0]*4
