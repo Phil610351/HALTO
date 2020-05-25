@@ -19,7 +19,7 @@ def sockeeet():
 		with open("output.txt") as f:
 			cpu_data={'instance':0,'data':f.read()[-56:-51]}
 			print(cpu_data)
-			r=requests.request('POST','http://192.168.43.101:5000', headers=headers, data=json.dumps(cpu_data))
+			r=requests.request('POST','http://140.112.77.188:5000', headers=headers, data=json.dumps(cpu_data))
 			time.sleep(1)
 		i+=1
 	r=requests.request('POST','http://140.112.77.188:5000', headers=headers, data=json.dumps({'instance':3,'data':0}))

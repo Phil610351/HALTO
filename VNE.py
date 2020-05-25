@@ -79,7 +79,7 @@ def gen_task(event):
 				index+=1
 				break
 			else:	index+=1
-	def node1():	r=requests.request('POST','http://192.168.43.170:11111', headers=headers, data=json.dumps({'data':task[0]}))
+	def node1():	r=requests.request('POST','http://140.112.20.183:11111', headers=headers, data=json.dumps({'data':task[0]}))
 	#def node2():	r=requests.request('POST','http://192.168.43.2:11111', headers=headers, data=json.dumps({'data':task[1]}))
 	Thread(target=node1).start()
 	#Thread(target=node2).start()
