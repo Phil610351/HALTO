@@ -7,11 +7,11 @@ import time
 headers = {'Content-Type': 'application/json'}
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/',methods=['POST'])
 def sockeeet():
 	req=request.get_json()
 	print(req)
-	def computing():	os.system("stress-ng -c 0 -l "+str(req['data'])+' --timeout 5')
+	def computing():	os.system("stress-ng -c 0 -l "+str(req['data'])+' --timeout 7')
 	Thread(target=computing).start()			
 	i=0
 	while i<5:
@@ -21,7 +21,7 @@ def sockeeet():
 			r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps(cpu_data))
 			time.sleep(1)
 		i+=1
-	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':3,'data':0}))
+	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':7,'data':0}))
 if __name__ == '__main__':
 	def writing():	os.system("sar 1 >output.txt")
 	Thread(target=writing).start()

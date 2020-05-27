@@ -8,7 +8,7 @@ import time
 headers = {'Content-Type': 'application/json'}
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/',methods=['POST'])
 def sockeeet():
 	req = request.get_json()
 	print(req)
@@ -25,23 +25,26 @@ def sockeeet():
 		c1=route.create_text(100,300,text=req['data'],font=('Arial', 16))
 	elif req['instance']==1:
 		route.delete(c2)
-		c2=route.create_text(250,100,text=req['data'],font=('Arial', 16))
+		c2=route.create_text(250,300,text=req['data'],font=('Arial', 16))
 	elif req['instance']==2:
 		route.delete(c3)
-		c3=route.create_text(400,500,text=req['data'],font=('Arial', 16))
+		c3=route.create_text(400,300,text=req['data'],font=('Arial', 16))
 	elif req['instance']==3:
 		route.delete(c4)
-		c4=route.create_text(550,500,text=req['data'],font=('Arial', 16))
+		c4=route.create_text(550,300,text=req['data'],font=('Arial', 16))
 	elif req['instance']==4:
 		route.delete(c5)
-		c5=route.create_text(700,500,text=req['data'],font=('Arial', 16))
+		c5=route.create_text(700,300,text=req['data'],font=('Arial', 16))
 	elif req['instance']==5:
 		route.delete(c6)
-		c6=route.create_text(850,500,text=req['data'],font=('Arial', 16))
+		c6=route.create_text(850,300,text=req['data'],font=('Arial', 16))
 	else:
-		route.delete(a)
-		route.delete(b)
-		route.delete(c)			
+		route.delete(c1)
+		route.delete(c2)
+		route.delete(c3)
+		route.delete(c4)
+		route.delete(c5)
+		route.delete(c6)			
 		c1=route.create_text(100,300,text='0',font=('Arial', 16))
 		c2=route.create_text(250,300,text='0',font=('Arial', 16))
 		c3=route.create_text(400,300,text='0',font=('Arial', 16))
@@ -131,21 +134,21 @@ def gen_task(event):
 				break
 			else:	index+=1
 	#print(load)
-	def node1():	r=requests.request('POST','http://192.168.8.101:11111', headers=headers, data=json.dumps({'data':load[0]}))
-	def node2():	r=requests.request('POST','http://192.168.8.126:11111', headers=headers, data=json.dumps({'data':load[1]}))
-	def node2():	r=requests.request('POST','http://192.168.8.161:11111', headers=headers, data=json.dumps({'data':load[2]}))
-	def node2():	r=requests.request('POST','http://192.168.8.177:11111', headers=headers, data=json.dumps({'data':load[3]}))
-	def node2():	r=requests.request('POST','http://192.168.8.165:11111', headers=headers, data=json.dumps({'data':load[4]}))
-	def node2():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
-	Thread(target=node1).start()
-	Thread(target=node2).start()
-	Thread(target=node3).start()
-	Thread(target=node4).start()
+	#def node1():	r=requests.request('POST','http://192.168.8.101:11111', headers=headers, data=json.dumps({'data':load[0]}))
+	#def node2():	r=requests.request('POST','http://192.168.8.126:11111', headers=headers, data=json.dumps({'data':load[1]}))
+	#def node3():	r=requests.request('POST','http://192.168.8.161:11111', headers=headers, data=json.dumps({'data':load[2]}))
+	#def node4():	r=requests.request('POST','http://192.168.8.177:11111', headers=headers, data=json.dumps({'data':load[3]}))
+	def node5():	r=requests.request('POST','http://192.168.8.165:11111', headers=headers, data=json.dumps({'data':load[4]}))
+	#def node6():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
+	#Thread(target=node1).start()
+	#Thread(target=node2).start()
+	#Thread(target=node3).start()
+	#Thread(target=node4).start()
 	Thread(target=node5).start()
-	Thread(target=node6).start()
+	#Thread(target=node6).start()
 
 d=list()
-value=[0]*4
+value=[0]*10
 if __name__ == '__main__':
 	Thread(target=draw).start()
 	app.debug = True
