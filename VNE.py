@@ -134,18 +134,18 @@ def gen_task(event):
 				break
 			else:	index+=1
 	#print(load)
-	#def node1():	r=requests.request('POST','http://192.168.8.101:11111', headers=headers, data=json.dumps({'data':load[0]}))
-	#def node2():	r=requests.request('POST','http://192.168.8.126:11111', headers=headers, data=json.dumps({'data':load[1]}))
-	#def node3():	r=requests.request('POST','http://192.168.8.161:11111', headers=headers, data=json.dumps({'data':load[2]}))
-	#def node4():	r=requests.request('POST','http://192.168.8.177:11111', headers=headers, data=json.dumps({'data':load[3]}))
+	def node1():	r=requests.request('POST','http://192.168.8.126:11111', headers=headers, data=json.dumps({'data':load[0]}))
+	def node2():	r=requests.request('POST','http://192.168.8.161:11111', headers=headers, data=json.dumps({'data':load[1]}))
+	def node3():	r=requests.request('POST','http://192.168.8.177:11111', headers=headers, data=json.dumps({'data':load[2]}))
+	def node4():	r=requests.request('POST','http://192.168.8.134:11111', headers=headers, data=json.dumps({'data':load[3]}))
 	def node5():	r=requests.request('POST','http://192.168.8.165:11111', headers=headers, data=json.dumps({'data':load[4]}))
-	#def node6():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
-	#Thread(target=node1).start()
-	#Thread(target=node2).start()
-	#Thread(target=node3).start()
-	#Thread(target=node4).start()
+	def node6():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
+	Thread(target=node1).start()
+	Thread(target=node2).start()
+	Thread(target=node3).start()
+	Thread(target=node4).start()
 	Thread(target=node5).start()
-	#Thread(target=node6).start()
+	Thread(target=node6).start()
 
 d=list()
 value=[0]*10
