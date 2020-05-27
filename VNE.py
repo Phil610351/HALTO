@@ -7,7 +7,7 @@ import numpy as np
 import time
 headers = {'Content-Type': 'application/json'}
 app = Flask(__name__)
-
+app.debug = True
 @app.route('/',methods=['POST'])
 def sockeeet():
 	req = request.get_json()
@@ -59,16 +59,17 @@ def sockeeet():
 
 def draw():
 	global route
-	root = Tk()
-	route = Canvas(root,width=950, height=700)
-	route.pack()
-	route.bind( "<Button-1>", gen_task)
 	global c1
 	global c2
 	global c3
 	global c4
 	global c5
-	global c6
+	global c6	
+	root = Tk()
+	route = Canvas(root,width=950, height=700)
+	route.pack()
+	route.bind( "<Button-1>", gen_task)	
+
 	route.create_oval( 425, 50, 525, 150, width = 3 )
 	route.create_text(475,100,text='Control',font=('Arial', 16))
 	route.create_line(475, 150, 100, 250, fill='green', width= 3 )
@@ -146,10 +147,9 @@ def gen_task(event):
 	Thread(target=node4).start()
 	Thread(target=node5).start()
 	Thread(target=node6).start()
-
+def server():	app.run(host='0.0.0.0')
 d=list()
 value=[0]*10
 if __name__ == '__main__':
 	Thread(target=draw).start()
-	app.debug = True
-	app.run(host='0.0.0.0')
+	Thread(target=server).start()
