@@ -26,7 +26,6 @@ def sockeeet():
 				cpu_data={'instance':0,'data':round(count/(time.time()-start),2)}
 				print(cpu_data,read)
 				r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps(cpu_data))
-				sample+=1
 			except:	pass
 			time.sleep(1)
 		i+=1
