@@ -32,6 +32,7 @@ def sockeeet():
 		i+=1
 		if sample>4:
 			sample=1
+			count=0
 	#r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':0,'data':round(count/15,2)}))
 	r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps({'instance':7,'data':0}))
 if __name__ == '__main__':
