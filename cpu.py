@@ -23,7 +23,7 @@ def sockeeet():
 			try:		
 				read=f.read()[-56:-51]
 				count+=float(read)
-				cpu_data={'instance':0,'data':round(count/(time.time()-start),2)}
+				cpu_data={'instance':0,'data':round(count/2/(time.time()-start),2)}
 				print(cpu_data,read)
 				r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps(cpu_data))
 			except:	pass
