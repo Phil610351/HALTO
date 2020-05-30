@@ -23,12 +23,12 @@ def sockeeet():
 				read=f.read()[-56:-51]
 				cpu_data={'instance':0,'data':read}
 				print(cpu_data)
-				count+=int(read)
+				count+=float(read)
 				r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps(cpu_data))
 			except:	pass
 			time.sleep(1)
 		i+=1
-	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':0,'data':count/15}))
+	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':0,'data':round(count/15,2)}))
 	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':7,'data':0}))
 if __name__ == '__main__':
 	app.debug = True
