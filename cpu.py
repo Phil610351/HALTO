@@ -17,18 +17,21 @@ def sockeeet():
 	Thread(target=computing).start()
 	i=0
 	count=0
-	start=time.time()
+	sample=1
 	while i<15:
 		with open("output.txt") as f:
 			try:		
 				read=f.read()[-56:-51]
 				count+=float(read)
-				cpu_data={'instance':0,'data':round(count/2/(time.time()-start),2)}
+				cpu_data={'instance':0,'data':round(count/1.25/sample,2)}
 				print(cpu_data,read)
 				r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps(cpu_data))
+				sample+=1
 			except:	pass
 			time.sleep(1)
 		i+=1
+		if sample>4:
+			sample=1
 	#r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':0,'data':round(count/15,2)}))
 	r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps({'instance':7,'data':0}))
 if __name__ == '__main__':
