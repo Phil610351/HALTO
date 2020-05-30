@@ -25,7 +25,8 @@ def sockeeet():
 				cpu_data={'instance':0,'data':round(sum(MA)/1.25/len(MA),2)}
 				print(cpu_data,read)
 				r=requests.request('POST','http://192.168.8.155:5000', headers=headers, data=json.dumps(cpu_data))
-				MA.pop(0)
+				if len(MA)>4:
+					MA.pop(0)
 			except:	pass
 			time.sleep(1)
 		i+=1
