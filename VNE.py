@@ -123,7 +123,7 @@ def gen_traffic(event):
 			Thread(target=node4).start()
 			Thread(target=node5).start()
 			Thread(target=node6).start()
-			while time.time()-start<3:	pass
+			while time.time()-start<4:	pass
 			traffic+=incre
 			if traffic>7:
 				incre=-1
@@ -200,7 +200,7 @@ def genetic(state):
 			for i in range(1, len(Maternal)-len(rank)+1):
 				Maternal.pop(rank[-i][0])
 
-	generate(1000)
+	generate(500)
 	cou=0
 	st1=0
 	while 1:
@@ -208,12 +208,12 @@ def genetic(state):
 		Roulette=Maternal.copy()
 		for e in Roulette.values(): total+=e
 		for e in Roulette.keys():   Roulette[e]/=total
-		crossover(25, sorted(Roulette.items(), key=lambda kv: -kv[1]))
+		crossover(10, sorted(Roulette.items(), key=lambda kv: -kv[1]))
 		if st1==sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]:  cou+=1
 		else:
 			st1=sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]
 			cou=0
-		if cou>10:   break
+		if cou>5:   break
 	decision=sorted(Maternal.items(), key=lambda kv: -kv[1])[0][0]
 	return decision
 
