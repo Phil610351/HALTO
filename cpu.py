@@ -15,7 +15,7 @@ def sockeeet():
 	Thread(target=computing).start()
 	i=0
 	MA=list()
-	while i<3:
+	while i<10:
 		with open("output.txt") as f:
 			try:		
 				read=f.read()[-56:-51]

@@ -77,7 +77,7 @@ def draw():
 def gen_traffic(event):
 	def sine():
 		traffic=2
-		incre=1
+		incre=2
 		global d
 		while 1:
 			for e in d:	route.delete(e)
@@ -126,9 +126,9 @@ def gen_traffic(event):
 			while time.time()-start<10:	pass
 			traffic+=incre
 			if traffic>6:
-				incre=-1
+				incre=-2
 			if traffic<3:
-				incre=1
+				incre=2
 	Thread(target=sine).start()
 
 def cal_reward(state, decision):
