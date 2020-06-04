@@ -118,12 +118,12 @@ def gen_traffic(event):
 			def node5():	r=requests.request('POST','http://192.168.8.165:11111', headers=headers, data=json.dumps({'data':load[4]}))
 			def node6():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
 			Thread(target=node1).start()
-			Thread(target=node2).start()
-			Thread(target=node3).start()
-			Thread(target=node4).start()
-			Thread(target=node5).start()
-			Thread(target=node6).start()
-			while time.time()-start<4:	pass
+			#Thread(target=node2).start()
+			#Thread(target=node3).start()
+			#Thread(target=node4).start()
+			#Thread(target=node5).start()
+			#Thread(target=node6).start()
+			while time.time()-start<10:	pass
 			traffic+=incre
 			if traffic>7:
 				incre=-1

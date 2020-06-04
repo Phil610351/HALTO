@@ -26,6 +26,7 @@ def sockeeet():
 				if len(MA)>4:
 					MA.pop(0)
 			except:	pass
+		i+=1
 		time.sleep(1)
 	r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps({'instance':7,'data':0}))
 if __name__ == '__main__':
