@@ -11,7 +11,7 @@ app = Flask(__name__)
 def sockeeet():
 	req=request.get_json()
 	print(req)	
-	def computing():	os.system("stress-ng -c 2 -l "+str(req['data'])+' --timeout 3')
+	def computing():	os.system("stress-ng -c 2 -l "+str(req['data'])+' --timeout 10')
 	Thread(target=computing).start()
 	i=0
 	MA=list()
@@ -19,13 +19,13 @@ def sockeeet():
 		with open("output.txt") as f:
 			try:		
 				read=f.read()[-56:-51]
-				#MA.append(float(read))
-				#cpu_data={'instance':0,'data':round(sum(MA)/2/len(MA),2)}
-				cpu_data={'instance':0,'data':read}
+				MA.append(float(read))
+				cpu_data={'instance':0,'data':round(sum(MA)/2/len(MA),2)}
+				#cpu_data={'instance':0,'data':read}
 				print(cpu_data,read)
 				r=requests.request('POST','http://192.168.8.139:5000', headers=headers, data=json.dumps(cpu_data))
-				#if len(MA)>4:
-				#	MA.pop(0)
+				if len(MA)>4:
+					MA.pop(0)
 			except:	pass
 		i+=1
 		time.sleep(1)
