@@ -77,21 +77,20 @@ def draw():
 def gen_traffic(event):
 	def sine():
 		traffic=2
-		incre=1	
+		incre=1
+		global d
 		while 1:
-			start=time.time()
-			global d
 			for e in d:	route.delete(e)
 			d=list()
 
 			total_task=list()
-			if traffic>3 and traffic<7:	d.append(route.create_text(150,50,text='Hybrid',fill='green',font=('Arial', 24)))
-			elif traffic>=7:	d.append(route.create_text(150,50,text='Online',fill='red',font=('Arial', 24)))
+			if traffic>3 and traffic<6:	d.append(route.create_text(150,50,text='Hybrid',fill='green',font=('Arial', 24)))
+			elif traffic>=6:	d.append(route.create_text(150,50,text='Online',fill='red',font=('Arial', 24)))
 			else:	d.append(route.create_text(150,50,text='Offline',fill='blue',font=('Arial', 24)))
 			anchor=0
 			for n_u in range(traffic):
 				task=list()
-				for i in range(np.random.randint(2,6)):	task.append(np.random.poisson(20))
+				for i in range(np.random.randint(2,6)):	task.append(np.random.poisson(30))
 				total_task.append(task)
 				d.append(route.create_text(1000,25+anchor,text='User'+str(n_u+1)+':',font=('Arial', 16)))
 				anchor+=20
@@ -118,14 +117,15 @@ def gen_traffic(event):
 			def node5():	r=requests.request('POST','http://192.168.8.165:11111', headers=headers, data=json.dumps({'data':load[4]}))
 			def node6():	r=requests.request('POST','http://192.168.8.110:11111', headers=headers, data=json.dumps({'data':load[5]}))
 			Thread(target=node1).start()
-			#Thread(target=node2).start()
-			#Thread(target=node3).start()
-			#Thread(target=node4).start()
-			#Thread(target=node5).start()
-			#Thread(target=node6).start()
-			while time.time()-start<10:	pass
+			Thread(target=node2).start()
+			Thread(target=node3).start()
+			Thread(target=node4).start()
+			Thread(target=node5).start()
+			Thread(target=node6).start()
+			start=time.time()
+			while time.time()-start<4:	pass
 			traffic+=incre
-			if traffic>7:
+			if traffic>6:
 				incre=-1
 			if traffic<3:
 				incre=1
@@ -200,7 +200,7 @@ def genetic(state):
 			for i in range(1, len(Maternal)-len(rank)+1):
 				Maternal.pop(rank[-i][0])
 
-	generate(500)
+	generate(100)
 	cou=0
 	st1=0
 	while 1:
@@ -208,7 +208,7 @@ def genetic(state):
 		Roulette=Maternal.copy()
 		for e in Roulette.values(): total+=e
 		for e in Roulette.keys():   Roulette[e]/=total
-		crossover(10, sorted(Roulette.items(), key=lambda kv: -kv[1]))
+		crossover(5, sorted(Roulette.items(), key=lambda kv: -kv[1]))
 		if st1==sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]:  cou+=1
 		else:
 			st1=sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]
