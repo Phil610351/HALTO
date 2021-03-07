@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=10
+users=30
 B=1
 N=1e-10
 F=10
-num=30
+avg=0.1
+num=60
 x_num=7
 
 def gen_task():
@@ -17,7 +18,7 @@ def gen_task():
 		#buf['d']=np.random.uniform(100,2000)/1000
 		buf['d']=buf['a']
 		buf['fl']=np.random.uniform(1.5,2.5)
-		buf['Tm']=np.random.uniform(0.1,1)
+		buf['Tm']=np.random.uniform(avg,1)
 		buf['pri']=np.random.uniform(0.1,1)
 		buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
 		tasks[i]=buf
@@ -190,7 +191,7 @@ def greedy(tasks):
 		#allocate bandwidth
 		bi=1*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
 		if remaining-bi<0:
-			break
+			pass
 		else:
 			remaining-=bi
 			xi[e[0]]=1
@@ -474,7 +475,7 @@ def test():
 
 	return perform
 
-def draw():
+def draw_users():
 	global users
 	x=list()
 	result=list()
@@ -502,7 +503,36 @@ def draw():
 	plt.savefig('QoS.png', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw()
+def draw_avg():
+	global avg
+
+	x=list()
+	result=list()
+	for e in range(6):
+		result.append([])
+
+	for e in range(x_num):
+		perform=test()
+		x.append(avg)
+		for i in range(6):
+			result[i].append(perform[i])
+
+		avg+=0.1
+
+	plt.plot(x,result[5],"go-",label='SS')
+	plt.plot(x,result[4],"b*-",label='PSO')
+	plt.plot(x,result[3],"ks-",label='GA')
+	plt.plot(x,result[2],"yD-",label='Greedy')
+	plt.plot(x,result[1],"rp-",label='FRE')
+	plt.plot(x,result[0],"cx-",label='FLE')
+	plt.xlabel("Latency requirement")
+	plt.ylabel("QoS")
+	plt.legend()
+	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('Tm.png', dpi = 600, bbox_inches='tight')
+	plt.show()
+
+draw_avg()
 
 #iterative/greedy:1.08, iterative/GA:1.18 ,2/24
 
