@@ -128,19 +128,7 @@ def iterative2(tasks):
 			reward+=e[1]['pri']*(1-t/(e[1]['d']) )
 
 	return reward/users
-
-def iterative(tasks):
-	xi=[0]*users
-	tasks_s=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/kv[1]['a'])
-
-	for e in tasks_s:
-		buf=xi.copy()
-		buf[e[0]]=30/31
-		if caltech(tasks, buf)>caltech(tasks,xi):
-			xi=buf
-
-	return xi
-
+	
 def greedy(tasks):
 	xi=[0]*users
 	tasks_s=sorted(tasks.items(), key=lambda kv: kv[1]['pri'])
