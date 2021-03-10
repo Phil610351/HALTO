@@ -1,0 +1,10 @@
+sudo docker images
+sudo docker rmi image_id
+sudo docker ps -a
+sudo docker stop container_id
+sudo docker rm container_id
+
+sudo docker build -t appname .
+sudo docker run -d -p 4000:80 appname
+
+--cpu-quota=500000
