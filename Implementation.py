@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
+import json
 from math import log2
+from time import time
 
 users=10
 B=1
 N=1e-10
 F=10
 avg=0.1
-num=10
+num=6
 x_num=7
 
 def gen_task():
@@ -27,29 +30,50 @@ def gen_task():
 #發offloading request到server
 def cal_real(tasks, xi):
 	reward=0
-	b=list()
+	fc=dict()
 
 	#sum of sqrt
 	ss=0
 	for k,v in tasks.items():
-		ss+=(xi[k]*v['a']*v['pri']/log2(1+v['SINR']))**0.5
+		if xi[k]>0:
+			ss+=(xi[k]*v['a']*v['pri'])**0.5
 
-	#cal lagrange b
+	#cal lagrange f
 	for k,v in tasks.items():
-		if ss!=0:
-			b.append(((xi[k]*v['a']*v['pri']/log2(1+v['SINR']))**0.5)*B/ss)
-		else:
-			b.append(0)
+		if xi[k]>0:
+			fc[k]=((xi[k]*v['a']*v['pri'])**0.5)/ss
 
 	for k,v in tasks.items():
-		if xi[k]!=0:
-			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']))
+
+		if xi[k]>0:
+			'''start=time()
+			for e in range( int((1-xi[k])*v['d']*100) ):
+				fil=open('realtime.jpg', 'rb')
+				b=fil.read()
+				d=open('test.png', 'wb')
+				d.write(b)
+			local=time()-start'''
+			load=dict()
+			load['round']=int(xi[k]*v['d']*100)
+			r=requests.post('http://35.221.185.18:80', data = json.dumps(load))
+			remote=json.loads(r.text)['t']
+			#print(local*10, remote*10/15/fc[k])
+			t=max((1-xi[k])*v['d'], remote*10/15/fc[k])
+		
 		else:
-			t=(1-xi[k])*v['d']/v['fl']
+			t=v['d']
+			'''start=time()
+			for e in range(int((1-xi[k])*v['d']*100)):
+				fil=open('realtime.jpg', 'rb')
+				b=fil.read()
+				d=open('test.png', 'wb')
+				d.write(b)
+			t=(time()-start)*10'''
+
 		if t<v['Tm']:
-			reward+=v['pri']*(1-t/(v['d']) )*10
+			reward+=v['pri']*(1-t/(v['d']) )
 
-	return reward/users/10
+	return reward/users
 
 def caltech(tasks, xi):
 	reward=0
@@ -60,15 +84,12 @@ def caltech(tasks, xi):
 	for k,v in tasks.items():
 		if xi[k]>0:
 			ss+=(xi[k]*v['a']*v['pri'])**0.5
-			#ss+=1
 
-	#cal lagrange b
+	#cal lagrange f
 	for k,v in tasks.items():
 		if xi[k]>0:
 			f[k]=((xi[k]*v['a']*v['pri'])**0.5)*30/ss
-			#f[k]=20/ss
 
-	#print(f)
 	for k,v in tasks.items():
 		if xi[k]>0:
 			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['d']/f[k])
@@ -87,11 +108,11 @@ def iterative2(tasks):
 	for e in tasks.values():
 		xi.append( 1-min(1,e['Tm']*e['fl']/e['d']) )
 
-	tasks=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/kv[1]['a'])
+	tasks_s=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/kv[1]['a'])
 
 	#occupied f
 	remaining=30
-	for e in tasks:
+	for e in tasks_s:
 		fi=xi[e[0]]*e[1]['a']/e[1]['Tm']
 		if remaining-fi<0:
 			break
@@ -99,36 +120,77 @@ def iterative2(tasks):
 			remaining-=fi
 			reserved_f[e[0]]=fi
 
-	for e in tasks:
+	for e in tasks_s:
 		f[e[0]]=reserved_f[e[0]] + remaining/users
 
 	i=0
 	while i<10:
 		#update x
-		for e in tasks:
+		for e in tasks_s:
 			xi[e[0]]=f[e[0]]/(f[e[0]]+1)
 
 		#sum of sqrt
 		ss=0
-		for e in tasks:
+		for e in tasks_s:
 			ss+=(xi[e[0]]*e[1]['a']*e[1]['pri'])**0.5
 
-		#update b
-		for e in tasks:
+		#update f
+		for e in tasks_s:
 			f[e[0]]=reserved_f[e[0]] + ((xi[e[0]]*e[1]['a']*e[1]['pri'])**0.5)*remaining/ss
 		i+=1
 
+	#for i in range(users):
+	#	f[i]/=30
+
+
 	reward=0
-	for e in tasks:
+
+	'''for e in range(500):
+		fil=open('realtime.jpg', 'rb')
+		b=fil.read()
+		d=open('test.png', 'wb')
+		d.write(b)'''
+	
+	for k,v in tasks.items():
+
+		if xi[k]>0:
+			'''start=time()
+			for e in range( int((1-xi[k])*v['d']*1000) ):
+				fil=open('realtime.jpg', 'rb')
+				b=fil.read()
+				d=open('test.png', 'wb')
+				d.write(b)
+			local=time()-start'''
+			load=dict()
+			load['round']=int(xi[k]*v['d']*100)
+			r=requests.post('http://35.221.185.18:80', data = json.dumps(load))
+			remote=json.loads(r.text)['t']
+			#print(((1-xi[k])*v['d'])/(remote*10/15/(f[k]/30)*0.94) )
+			t=max((1-xi[k])*v['d'], remote*10/15/(f[k]/30)*0.94)
+
+		else:
+			start=time()
+			for e in range(int((1-xi[k])*v['d']*100)):
+				fil=open('realtime.jpg', 'rb')
+				b=fil.read()
+				d=open('test.png', 'wb')
+				d.write(b)
+			t=(time()-start)*10
+
+		if t<v['Tm']:
+			reward+=v['pri']*(1-t/(v['d']) )
+
+	'''for e in tasks_s:
 		if xi[e[0]]!=0:
+			print((1-xi[e[0]])*e[1]['d']/e[1]['fl'], xi[e[0]]*e[1]['a']/f[e[0]])
 			t=max( (1-xi[e[0]])*e[1]['d']/e[1]['fl'], xi[e[0]]*e[1]['a']/f[e[0]])
 		else:
 			t=(1-xi[e[0]])*e[1]['d']/e[1]['fl']
 		if t<e[1]['Tm']:
-			reward+=e[1]['pri']*(1-t/(e[1]['d']) )
+			reward+=e[1]['pri']*(1-t/(e[1]['d']) )'''
 
 	return reward/users
-	
+
 def greedy(tasks):
 	xi=[0]*users
 	tasks_s=sorted(tasks.items(), key=lambda kv: kv[1]['pri'])
@@ -407,13 +469,18 @@ def test():
 	perform=[0]*6
 	for i in range(num):
 		tasks=gen_task()
-		perform[0]+=caltech(tasks, [0]*users)/num
+		perform[0]+=cal_real(tasks, [0]*users)/num
+		perform[1]+=cal_real(tasks, [1]*users)/num
+		perform[2]+=cal_real(tasks, greedy(tasks))/num
+		perform[3]+=cal_real(tasks, GA_x(tasks))/num
+		perform[4]+=cal_real(tasks, PSO(tasks))/num
+		perform[5]+=iterative2(tasks)/num
+		print(i)
+		'''perform[0]+=caltech(tasks, [0]*users)/num
 		perform[1]+=caltech(tasks, [1]*users)/num
 		perform[2]+=caltech(tasks, greedy(tasks))/num
 		perform[3]+=caltech(tasks, GA_x(tasks))/num
-		perform[4]+=caltech(tasks, PSO(tasks))/num
-		#perform[5]+=caltech(tasks, iterative(tasks))/num
-		perform[5]+=iterative2(tasks)/num
+		perform[4]+=caltech(tasks, PSO(tasks))/num'''
 
 	return perform
 

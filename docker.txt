@@ -5,6 +5,6 @@ sudo docker stop container_id
 sudo docker rm container_id
 
 sudo docker build -t appname .
-sudo docker run -d -p 4000:80 appname
+sudo docker run -d -p 80:4000 appname
 
 --cpu-quota=500000

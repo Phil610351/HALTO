@@ -99,9 +99,8 @@ def iterative(tasks):
 		else:
 			t=(1-xi[e[0]])*e[1]['d']/e[1]['fl']
 		if t<e[1]['Tm']:
-			reward+=e[1]['pri']*(1-t/(e[1]['d']) )*10
-			
-	return reward/users/10
+			reward+=e[1]['pri']*(1-t/(e[1]['d']) )
+	return reward/users
 
 def iterative2(tasks):
 	xi=list()
