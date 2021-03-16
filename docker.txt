@@ -8,3 +8,7 @@ sudo docker build -t appname .
 sudo docker run -d -p 80:4000 appname
 
 --cpu-quota=500000
+
+sudo docker run -d -p 80:4000 --cpu-quota=500000 test6
+
+stress-ng -c 0 -l 50

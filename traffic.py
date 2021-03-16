@@ -8,14 +8,15 @@ from keras.models import Sequential
 train_x=list()
 train_y=list()
 y=list()
-with open("youtube.parsed.012908.dat") as f:
+with open("train.dat") as f:
 	a=f.read().split('\n')
 	count=0
 	hour=0
 	buf=list()
 	for e in a:
 		e=e.split()
-		if int(e[0][:10])-1201639675>3600*hour:
+		#if int(e[0][:10])-1189809385>60*hour:
+		if int(e[0][:10])-1201639675>60*hour:
 			y.append(count)
 			buf.append(count)				
 			count=0
@@ -27,6 +28,9 @@ with open("youtube.parsed.012908.dat") as f:
 				train_x.append(buf[:])
 		else:
 			count+=1
+		
+		if hour>5000:
+			break
 
 train_y.pop(0)
 train_x.pop()
@@ -42,14 +46,14 @@ DNN.fit([train_x], [train_y], epochs=1000, batch_size=100)
 y=list()
 train_x=list()
 train_y=list()
-with open("youtube.parsed.091507.dat") as f:
+with open("test.dat") as f:
 	a=f.read().split('\n')
 	count=0
 	hour=0
 	buf=list()
 	for e in a:
 		e=e.split()
-		if int(e[0][:10])-1189809385>3600*hour:
+		if int(e[0][:10])-1189809385>60*hour:
 			y.append(count)
 			buf.append(count)				
 			count=0
@@ -61,6 +65,8 @@ with open("youtube.parsed.091507.dat") as f:
 				train_x.append(buf[:])
 		else:
 			count+=1
+		if hour>5000:
+			break
 
 print(train_x)
 y=DNN.predict( np.array(train_x))
