@@ -7,7 +7,7 @@ B=1
 N=1e-10
 F=10
 avg=0.1
-num=60
+num=1
 x_num=7
 
 def gen_task():
@@ -47,8 +47,6 @@ def caltech(tasks, xi):
 			t=(1-xi[k])*v['d']/v['fl']
 		if t<v['Tm']:
 			reward+=v['pri']*(1-t/(v['d']) )*10
-		#else:
-		#	reward-=v['pri']*10
 
 	return reward/users/10
 
@@ -194,6 +192,63 @@ def greedy(tasks):
 
 	return xi
 
+def PSO(tasks):
+	particles=200
+	#a single particle (solution vector)
+	decision=list()
+	#particle's v
+	velocity=list()
+
+	#initialize
+	for i in range(particles):
+		decision.append([])
+		velocity.append([])
+		for j in range(users):
+			if np.random.rand()<15/users:
+				decision[i].append(np.random.rand())
+				velocity[i].append(np.random.uniform(0.5,0.5))
+			else:
+				decision[i].append(0)
+				velocity[i].append(0)
+
+	#each particle's history
+	history=list()
+	for i in range(particles):
+		history.append([decision[i],-100])
+	glob_best=[decision[-1],-100]
+	
+	cou=0
+	while cou<7:
+		#cal fitness & update
+		best=glob_best[1]
+		for i in range(particles):
+
+			value=caltech(tasks, decision[i])
+			if value > history[i][1]:
+				history[i][0]=decision[i]
+				history[i][1]=value
+			if value > glob_best[1]:
+				glob_best[0]=decision[i]
+				glob_best[1]=value
+
+		if best==glob_best[1]:
+			cou+=1
+		else:
+			cou=0
+		
+		#update velocity & position
+		for i in range(particles):
+			for j in range(users):
+				velocity[i][j]=velocity[i][j]+0.01*(history[i][0][j]-decision[i][j])+0.01*(glob_best[0][j]-decision[i][j])
+				decision[i][j]+=velocity[i][j]
+				if decision[i][j]>1:
+					decision[i][j]=1
+				if decision[i][j]<0:
+					decision[i][j]=0
+
+	#print(glob_best)
+	return glob_best[0]
+
 def GA_x(tasks):
 	Maternal=list()
 	table=list()
@@ -289,87 +344,20 @@ def GA_x(tasks):
 
 	return xi
 
-def PSO(tasks):
-	particles=200
-	#a single particle (solution vector)
-	decision=list()
-	#particle's v
-	velocity=list()
-
-	#initialize
-	for i in range(particles):
-		decision.append([])
-		velocity.append([])
-		for j in range(users):
-			if np.random.rand()<15/users:
-				decision[i].append(np.random.rand())
-				velocity[i].append(np.random.uniform(0.5,0.5))
-			else:
-				decision[i].append(0)
-				velocity[i].append(0)
-
-	#each particle's history
-	history=list()
-	for i in range(particles):
-		history.append([decision[i],-100])
-	glob_best=[decision[-1],-100]
-	
-	cou=0
-	while cou<7:
-		#cal fitness & update
-		best=glob_best[1]
-		for i in range(particles):
-
-			value=caltech(tasks, decision[i])
-			if value > history[i][1]:
-				history[i][0]=decision[i]
-				history[i][1]=value
-			if value > glob_best[1]:
-				glob_best[0]=decision[i]
-				glob_best[1]=value
-
-		if best==glob_best[1]:
-			cou+=1
-		else:
-			cou=0
-		
-		#update velocity & position
-		for i in range(particles):
-			for j in range(users):
-				velocity[i][j]=velocity[i][j]+0.01*(history[i][0][j]-decision[i][j])+0.01*(glob_best[0][j]-decision[i][j])
-				decision[i][j]+=velocity[i][j]
-				if decision[i][j]>1:
-					decision[i][j]=1
-				if decision[i][j]<0:
-					decision[i][j]=0
-
-	#print(glob_best)
-	return glob_best[0]
-
-def genetic(tasks):
+def GA(tasks):
 	Maternal=dict()
 
-	def cal_reward(tasks, decision):
-		reward=0
-		ss=0
-		for i in range(len(decision)):
-			if decision[i]!='0':
-				ss+=(tasks[i]['a']*tasks[i]['pri'])**0.5
-		
-		for i in range(len(decision)):
-			if decision[i]=='0':
-				t=tasks[i]['d']/tasks[i]['fl']
-				if t<tasks[i]['Tm']:
-					reward+=tasks[i]['pri']*t*10
-			else:
-				bi=B*(tasks[i]['a']*tasks[i]['pri']**0.5)/ss
-				t=tasks[i]['a']/bi/log2(1+tasks[i]['SINR'])
-				if t<tasks[i]['Tm']:
-					reward+=tasks[i]['pri']*(1-t/tasks[i]['Tm'])*10
-				#else:
-				#	reward-=tasks[1]['pri']*10
+	def generate(size):
+		for a in range(size):
+			decision=list()
+			for b in range(users):
+				if np.random.rand()<15/users:
+					decision.append(np.random.rand())
+				else:
+					decision.append(0)
 
-		return reward/len(tasks)/10
+			table.append(decision)
+			Maternal.append([decision, caltech(tasks, decision)])
 
 	def generate(size):
 		for a in range(size):
@@ -528,7 +516,7 @@ def draw_avg():
 	plt.savefig('Tm.png', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_avg()
+draw_users()
 
 #iterative/greedy:1.08, iterative/GA:1.18 ,2/24
 
