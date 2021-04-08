@@ -1,6 +1,7 @@
-#from keras.layers import Flatten, Dense, Activation
-#from keras.models import Sequential
+from keras.layers import Flatten, Dense, Activation
+from keras.models import Sequential
 from math import log2
+from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -93,64 +94,82 @@ def cal_profit(users, action):
 
 #DRL
 def DQL():
-	#一個episode
+	Q=dict()
+	exp_x, exp_y=list(), list()
+
+	#DNN
+	DNN = Sequential()
+	DNN.add(Dense(64, input_shape=(history,)) )
+	DNN.add(Dense(64, activation="relu"))
+	DNN.add(Dense(5))
+	DNN.compile(loss='mae', optimizer='adam', metrics=['mae'])
+
+	def init():
+		for i in range(history, len(traffic)-1):
+			Q[str(traffic[i-history:i])]=dict()
+			for e in range(5):
+				Q[str(traffic[i-history:i])][e]=0
+
+
+	#agent explore env 一個episode
 	def play(episode):
 		global epsilon
+		start=time()
 		for i in range(history, len(traffic)-1):
-			state=str(traffic[i-history:i])
+			state=traffic[i-history:i]
+			exp_x.append(state)
+
 			#epsilon-greedy
 			if np.random.rand()<epsilon:
 				action=np.random.randint(5)
 
 			else:
-				best, action= 0, 0
-				for e in Q[state]:
-					if Q[state][e]>best:
-						best=Q[state][e]
-						action=e
-				if best==0:
-					action=np.random.randint(5)
+				action=DNN.predict(np.array([state]))[0]
+				action=list(action).index(max(action))
 
 			if episode>0.01:
 				epsilon-=(1-0.01)/10000
 
-			Q[state][action]=(cal_profit(traffic[i+1], action) + Q[state][action]*episode )/(episode+1)
+			target_Q=DNN.predict(np.array([state]))[0]
+			Q[str(state)][action]=(cal_profit(traffic[i+1], action) + Q[str(state)][action]*episode )/(episode+1)
+			target_Q[action]=Q[str(state)][action]
+			exp_y.append(target_Q)
+		
 
+			if len(exp_x)>500:
+				exp_x.pop(0)
+				exp_y.pop(0)
 
-	#放現在的RL進去玩
+			if episode%20==0:
+				DNN.fit([exp_x], [exp_y], epochs=2, batch_size=150)
+		print(time()-start)
+
+	#放現在的agent進去玩
 	def exam():
 		profit=list()
 		perform=0
 		for i in range(history, len(traffic)-1):
-			state=str(traffic[i-history:i])
-			best, action= 0, 0
-			for e in Q[state]:
-				if Q[state][e]>best:
-					best=Q[state][e]
-					action=e
-			if best==0:
-				action=np.random.randint(5)
-			#print('next:',traffic[i+1],'action:',0.1+action*0.3)
+			state=traffic[i-history:i]
+			
+			action=DNN.predict(np.array([state]))[0]
+			action=list(action).index(max(action))
+
 			for e in range(num):
 				perform+=cal_profit(traffic[i+1], action)/traffic[i+1]/num
-			#profit.append(cal_profit(traffic[i+1], action)/traffic[i+1])
 
 		return perform/len(traffic)
-		#plt.plot(traffic[6:],label='real')
-		#plt.plot(profit,label='revenue')
-		#plt.legend()
-		#plt.show()
 
 
 	def main():
-		episode=0
 		init()
+		episode=1
 
 		x=list()
 		result=list()
 
 		while episode<1000:
 			play(episode)
+
 			#test revenue
 			if episode%100==0:
 				x.append(episode)
@@ -164,6 +183,7 @@ def DQL():
 		plt.show()
 
 	main()
+
 
 #純QL, 
 def QL():
@@ -173,12 +193,13 @@ def QL():
 	def init():
 		for i in range(history, len(traffic)-1):
 			Q[str(traffic[i-history:i])]=dict()
-			for e in range(5):		
+			for e in range(5):
 				Q[str(traffic[i-history:i])][e]=0
 
 	#一個episode
 	def play(episode):
 		global epsilon
+		start=time()
 		for i in range(history, len(traffic)-1):
 			state=str(traffic[i-history:i])
 			#epsilon-greedy
@@ -198,9 +219,9 @@ def QL():
 				epsilon-=(1-0.01)/10000
 
 			Q[state][action]=(cal_profit(traffic[i+1], action) + Q[state][action]*episode )/(episode+1)
+		print(time()-start)
 
-
-	#放現在的RL進去玩
+	#放現在的agent進去玩
 	def exam():
 		profit=list()
 		perform=0
@@ -248,16 +269,6 @@ def QL():
 
 	main()
 
-QL()
+DQL()
 
-
-def DNN():
-
-	model = Sequential()
-	model.add(Dense(32, input_shape=(10,)) )
-	model.add(Dense(32, activation="relu"))
-	model.add(Dense(1))
-	model.compile(loss='mae', optimizer='adam', metrics=['mae'])
-	model.fit([train_x], [train_y], epochs=1000, batch_size=100)
-
-#4/8: QL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
+#4/8: QL, DQL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
