@@ -16,7 +16,6 @@ def gen_task():
 	for i in range(users):
 		buf=dict()
 		buf['a']=np.random.uniform(100,1000)*2/1000
-		#buf['d']=np.random.uniform(100,2000)/1000
 		buf['d']=buf['a']
 		buf['fl']=np.random.uniform(1.5,2.5)
 		buf['Tm']=np.random.uniform(avg,1)
@@ -539,7 +538,7 @@ def draw_alpha():
 			result[a].append(perform)
 			users+=10
 		B+=0.3
-
+		print(B)
 
 	plt.plot(x,result[4],"go-",label='α=1.0')
 	plt.plot(x,result[3],"b*-",label='α=0.8')
@@ -562,4 +561,4 @@ draw_alpha()
 
 #4/7重新開工
 
-#4/8畫各alpha下的QoS值
+#4/8畫各alpha下的QoS值 B=0.1~1.3 QoS=0.3~0.5

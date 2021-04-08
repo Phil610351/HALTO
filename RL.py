@@ -1,13 +1,23 @@
 #from keras.layers import Flatten, Dense, Activation
 #from keras.models import Sequential
+from math import log2
+import matplotlib.pyplot as plt
 import numpy as np
 
-history=6
-epsilon=0.1
-explore=3000000
-gamma=0.8
+traffic=[29, 32, 39, 43, 50, 38, 38, 22, 12, 6, 3, 2, 3, 3, 7, 12, 15, 20, 28, 26, 33, 39, 36, 44, 30, 36, 41, 50, 48, 45, 32, 22, 12, 7, 4, 2, 1, 3, 7, 13, 25, 30, 28, 37, 39, 42, 47, 38, 32, 43, 45, 44, 49, 51, 42, 31, 19, 9, 5, 3, 2, 3, 6, 13, 19, 27, 27, 32, 43, 47, 55, 46, 35, 36, 39, 43, 38, 46, 37, 29, 23, 15, 6, 2, 1, 2, 4, 6, 13, 18, 26, 35, 37, 37, 36, 43, 39, 37, 48, 43, 43, 40, 35, 31, 21, 14, 6, 3, 2, 2, 3, 7, 11, 17, 25, 34, 40, 41, 43, 38, 26, 32, 41, 36, 43, 52, 39, 28, 20, 13, 6, 4, 3, 3, 7, 17, 24, 26, 37, 34, 39, 38, 46, 44, 37, 38, 47, 48, 52, 59, 46, 30, 16, 9, 3, 2, 3, 3, 6, 16, 19, 23, 26, 32, 33, 39, 44, 43, 33, 41, 42, 39, 51, 57, 44, 28, 20, 10, 5, 2, 1, 3, 6, 12, 23, 28, 27, 34, 35, 48, 50, 49, 36, 44, 45, 44, 49, 51, 48, 32, 20, 12, 5, 4, 2, 3, 6, 15, 19, 19, 33, 33, 33, 43, 46, 39, 35, 42, 48, 47, 51, 63, 50, 35, 24, 14, 6, 3, 2, 2, 6, 14, 22, 29, 26, 33, 42, 48, 48, 42, 37, 41, 41, 38, 41, 40, 33, 26, 22, 12, 5, 3, 1, 2, 3, 9, 14, 20, 22, 29, 33, 35, 38, 41, 35, 38, 38, 42, 42, 42, 36, 31, 24, 17, 9, 5, 4, 3, 3, 3, 10, 16, 21, 29, 33, 39, 42, 39, 32, 46, 49, 52, 52, 57, 45, 32, 20, 10, 3, 4, 3, 2]
 
-def cal_QoS(users, action):
+history=6
+epsilon=1
+gamma=0.8
+zeta=150
+
+N=1e-10
+F=10
+
+num=20
+
+def cal_profit(users, action):
+
 	def gen_task():
 		tasks=dict()
 		for i in range(users):
@@ -16,13 +26,13 @@ def cal_QoS(users, action):
 			buf['d']=buf['a']
 			buf['fl']=np.random.uniform(1.5,2.5)
 			buf['Tm']=np.random.uniform(0.1,1)
-			buf['pri']=np.random.uniform(0.1,1)
+			buf['pri']=np.random.uniform(0.1,1)*5
 			buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
 			tasks[i]=buf
 		return tasks
 
 	def iterative(tasks):
-		B=0.5+action/10
+		B=0.1+action*0.3
 
 		xi=list()
 		b=[0]*users
@@ -74,59 +84,169 @@ def cal_QoS(users, action):
 		
 		return reward/users
 
-	return iterative(gen_task())
+	QoS=iterative(gen_task())
+	revenue=users*QoS*4
+
+	#profit
+	return revenue-zeta*(0.1+action*0.3)/1.3
 
 
 #DRL
-def gen_data():
-	pass
+def DQL():
+	#一個episode
+	def play(episode):
+		global epsilon
+		for i in range(history, len(traffic)-1):
+			state=str(traffic[i-history:i])
+			#epsilon-greedy
+			if np.random.rand()<epsilon:
+				action=np.random.randint(5)
+
+			else:
+				best, action= 0, 0
+				for e in Q[state]:
+					if Q[state][e]>best:
+						best=Q[state][e]
+						action=e
+				if best==0:
+					action=np.random.randint(5)
+
+			if episode>0.01:
+				epsilon-=(1-0.01)/10000
+
+			Q[state][action]=(cal_profit(traffic[i+1], action) + Q[state][action]*episode )/(episode+1)
+
+
+	#放現在的RL進去玩
+	def exam():
+		profit=list()
+		perform=0
+		for i in range(history, len(traffic)-1):
+			state=str(traffic[i-history:i])
+			best, action= 0, 0
+			for e in Q[state]:
+				if Q[state][e]>best:
+					best=Q[state][e]
+					action=e
+			if best==0:
+				action=np.random.randint(5)
+			#print('next:',traffic[i+1],'action:',0.1+action*0.3)
+			for e in range(num):
+				perform+=cal_profit(traffic[i+1], action)/traffic[i+1]/num
+			#profit.append(cal_profit(traffic[i+1], action)/traffic[i+1])
+
+		return perform/len(traffic)
+		#plt.plot(traffic[6:],label='real')
+		#plt.plot(profit,label='revenue')
+		#plt.legend()
+		#plt.show()
+
+
+	def main():
+		episode=0
+		init()
+
+		x=list()
+		result=list()
+
+		while episode<1000:
+			play(episode)
+			#test revenue
+			if episode%100==0:
+				x.append(episode)
+				result.append(exam())
+			print(episode)
+			episode+=1
+
+		plt.plot(x,result,"go-",label='unit_profit')
+		plt.legend()
+		plt.savefig('unit_profit.jpg', dpi=600, bbox_inches='tight')
+		plt.show()
+
+	main()
 
 #純QL, 
 def QL():
-	traffic=[29, 32, 39, 43, 50, 38, 38, 22, 12, 6, 3, 2, 3, 3, 7, 12, 15, 20, 28, 26, 33, 39, 36, 44, 30, 36, 41, 50, 48, 45, 32, 22, 12, 7, 4, 2, 1, 3, 7, 13, 25, 30, 28, 37, 39, 42, 47, 38, 32, 43, 45, 44, 49, 51, 42, 31, 19, 9, 5, 3, 2, 3, 6, 13, 19, 27, 27, 32, 43, 47, 55, 46, 35, 36, 39, 43, 38, 46, 37, 29, 23, 15, 6, 2, 1, 2, 4, 6, 13, 18, 26, 35, 37, 37, 36, 43, 39, 37, 48, 43, 43, 40, 35, 31, 21, 14, 6, 3, 2, 2, 3, 7, 11, 17, 25, 34, 40, 41, 43, 38, 26, 32, 41, 36, 43, 52, 39, 28, 20, 13, 6, 4, 3, 3, 7, 17, 24, 26, 37, 34, 39, 38, 46, 44, 37, 38, 47, 48, 52, 59, 46, 30, 16, 9, 3, 2, 3, 3, 6, 16, 19, 23, 26, 32, 33, 39, 44, 43, 33, 41, 42, 39, 51, 57, 44, 28, 20, 10, 5, 2, 1, 3, 6, 12, 23, 28, 27, 34, 35, 48, 50, 49, 36, 44, 45, 44, 49, 51, 48, 32, 20, 12, 5, 4, 2, 3, 6, 15, 19, 19, 33, 33, 33, 43, 46, 39, 35, 42, 48, 47, 51, 63, 50, 35, 24, 14, 6, 3, 2, 2, 6, 14, 22, 29, 26, 33, 42, 48, 48, 42, 37, 41, 41, 38, 41, 40, 33, 26, 22, 12, 5, 3, 1, 2, 3, 9, 14, 20, 22, 29, 33, 35, 38, 41, 35, 38, 38, 42, 42, 42, 36, 31, 24, 17, 9, 5, 4, 3, 3, 3, 10, 16, 21, 29, 33, 39, 42, 39, 32, 46, 49, 52, 52, 57, 45, 32, 20, 10, 3, 4, 3, 2]
 	Q=dict()
 
 	#Q table
 	def init():
-		for i in range(6, len(traffic)-1):
-			Q[str(traffic[i-6:i])]=dict()
-			for e in range(11):		
-				Q[str(traffic[i-6:i])][e]=0
+		for i in range(history, len(traffic)-1):
+			Q[str(traffic[i-history:i])]=dict()
+			for e in range(5):		
+				Q[str(traffic[i-history:i])][e]=0
 
 	#一個episode
 	def play(episode):
-		for i in range(6, len(traffic)-1):
-
+		global epsilon
+		for i in range(history, len(traffic)-1):
+			state=str(traffic[i-history:i])
 			#epsilon-greedy
-			if np.random.rand()<0.2:
-				action=np.random.randint(11)
+			if np.random.rand()<epsilon:
+				action=np.random.randint(5)
 
 			else:
 				best, action= 0, 0
-				for e in Q[str(traffic[i-6:i])]:
-					if Q[str(traffic[i-6:i])][e]>best:
-						best=Q[str(traffic[i-6:i])][e]
+				for e in Q[state]:
+					if Q[state][e]>best:
+						best=Q[state][e]
 						action=e
 				if best==0:
-					action=np.random.randint(11)
+					action=np.random.randint(5)
 
-			Q[str(traffic[i-6:i])][action]=(cal_QoS(traffic[i+1], action)+Q[str(traffic[i-6:i])][action]*episode)/(episode+1)
+			if episode>0.01:
+				epsilon-=(1-0.01)/10000
 
-			#if epsilon>0.0001:
-			#	epsilon-=(0.1-0.0001)/explore
+			Q[state][action]=(cal_profit(traffic[i+1], action) + Q[state][action]*episode )/(episode+1)
 
+
+	#放現在的RL進去玩
 	def exam():
-		pass
+		profit=list()
+		perform=0
+		for i in range(history, len(traffic)-1):
+			state=str(traffic[i-history:i])
+			best, action= 0, 0
+			for e in Q[state]:
+				if Q[state][e]>best:
+					best=Q[state][e]
+					action=e
+			if best==0:
+				action=np.random.randint(5)
+			#print('next:',traffic[i+1],'action:',0.1+action*0.3)
+			for e in range(num):
+				perform+=cal_profit(traffic[i+1], action)/traffic[i+1]/num
+			#profit.append(cal_profit(traffic[i+1], action)/traffic[i+1])
+
+		return perform/len(traffic)
+		#plt.plot(traffic[6:],label='real')
+		#plt.plot(profit,label='revenue')
+		#plt.legend()
+		#plt.show()
 
 
 	def main():
-		episode=1
+		episode=0
 		init()
 
-		while 1:
+		x=list()
+		result=list()
+
+		while episode<1000:
 			play(episode)
-			episode+=1
 			#test revenue
+			if episode%100==0:
+				x.append(episode)
+				result.append(exam())
+			print(episode)
+			episode+=1
+
+		plt.plot(x,result,"go-",label='unit_profit')
+		plt.legend()
+		plt.savefig('unit_profit.jpg', dpi=600, bbox_inches='tight')
+		plt.show()
+
+	main()
 
 QL()
 
@@ -139,3 +259,5 @@ def DNN():
 	model.add(Dense(1))
 	model.compile(loss='mae', optimizer='adam', metrics=['mae'])
 	model.fit([train_x], [train_y], epochs=1000, batch_size=100)
+
+#4/8: QL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
