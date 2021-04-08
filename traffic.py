@@ -55,7 +55,6 @@ with open("train.dat") as f:
 #plt.plot(y)
 #plt.show()
 
-
 train_y.pop(0)
 train_x.pop()
 print(len(train_x),len(train_y))
@@ -104,7 +103,7 @@ for i in range(len(RL_p)):
 '''plt.plot(y[:48], label='DNN')
 plt.plot(train_y[:48], label='real')
 plt.plot(fit3[10:58], label='ARIMA')'''
-plt.plot(RL_p, label='DNN')
+plt.plot(RL, label='DNN')
 plt.plot(y, label='real')
 plt.legend()
 plt.show()

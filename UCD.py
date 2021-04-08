@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=30
-B=1
+users=10
+#B=1
+B=0.1
 N=1e-10
 F=10
 avg=0.1
-num=1
+num=100
 x_num=7
 
 def gen_task():
@@ -46,9 +47,9 @@ def caltech(tasks, xi):
 		else:
 			t=(1-xi[k])*v['d']/v['fl']
 		if t<v['Tm']:
-			reward+=v['pri']*(1-t/(v['d']) )*10
+			reward+=v['pri']*(1-t/(v['d']) )
 
-	return reward/users/10
+	return reward/users
 
 def iterative(tasks):
 	xi=list()
@@ -516,10 +517,49 @@ def draw_avg():
 	plt.savefig('Tm.png', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_users()
+def draw_alpha():
+	global users
+	global B
+	x=list()
+	for e in range(x_num):
+		x.append(users)
+		users+=10
 
-#iterative/greedy:1.08, iterative/GA:1.18 ,2/24
+	result=list()
+	for e in range(5):
+		result.append([])
 
-#iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty) 2/25
+	for a in range(5):
+		users=10
+		for b in range(x_num):
+			perform=0
+			for c in range(num):
+				tasks=gen_task()
+				perform+=iterative(tasks)/num
+			result[a].append(perform)
+			users+=10
+		B+=0.3
 
-#iterative/PSO:1.21, iterative/greedy: 1.57 2/28
+
+	plt.plot(x,result[4],"go-",label='α=1.0')
+	plt.plot(x,result[3],"b*-",label='α=0.8')
+	plt.plot(x,result[2],"ks-",label='α=0.6')
+	plt.plot(x,result[1],"yD-",label='α=0.4')
+	plt.plot(x,result[0],"rp-",label='α=0.2')
+	plt.xlabel("Number of users")
+	plt.ylabel("QoS")
+	plt.legend()
+	plt.savefig('alpha.png', dpi = 600, bbox_inches='tight')
+	plt.show()
+
+draw_alpha()
+
+#2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
+
+#2/25: iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty)
+
+#2/28: iterative/PSO:1.21, iterative/greedy: 1.57
+
+#4/7重新開工
+
+#4/8畫各alpha下的QoS值
