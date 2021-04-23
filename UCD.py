@@ -540,11 +540,11 @@ def draw_alpha():
 		B+=0.3
 		print(B)
 
-	plt.plot(x,result[4],"go-",label='α=1.0')
-	plt.plot(x,result[3],"b*-",label='α=0.8')
-	plt.plot(x,result[2],"ks-",label='α=0.6')
-	plt.plot(x,result[1],"yD-",label='α=0.4')
-	plt.plot(x,result[0],"rp-",label='α=0.2')
+	plt.plot(x,result[4],"go-",label='β=1.0')
+	plt.plot(x,result[3],"b*-",label='β=0.8')
+	plt.plot(x,result[2],"ks-",label='β=0.6')
+	plt.plot(x,result[1],"yD-",label='β=0.4')
+	plt.plot(x,result[0],"rp-",label='β=0.2')
 	plt.xlabel("Number of users")
 	plt.ylabel("QoS")
 	plt.legend()

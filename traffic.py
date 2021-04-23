@@ -58,8 +58,16 @@ with open("train.dat") as f:
 train_y.pop(0)
 train_x.pop()
 print(len(train_x),len(train_y))
+model = ARIMA(train_y, order=(5, 0, 1))
+model = model.fit(disp=-1)
+#print()
 
-DNN = Sequential()
+plt.plot(train_y, label='real')
+plt.plot(model.predict(start=1, end=len(train_y)), label='fuck')
+plt.legend()
+plt.show()
+
+'''DNN = Sequential()
 DNN.add(Dense(32, input_shape=(10,)) )
 DNN.add(Dense(32, activation="relu"))
 DNN.add(Dense(1))
@@ -98,15 +106,12 @@ RL_p=DNN.predict( np.array(train_x))
 RL=list()
 
 for i in range(len(RL_p)):
-	RL.append(y[i]*0.3-RL_p[i]*zeta/2000)
+	RL.append(y[i]*0.3-RL_p[i]*zeta/2000)'''
 
 '''plt.plot(y[:48], label='DNN')
 plt.plot(train_y[:48], label='real')
 plt.plot(fit3[10:58], label='ARIMA')'''
-plt.plot(RL, label='DNN')
-plt.plot(y, label='real')
-plt.legend()
-plt.show()
+#plt.plot(L, label='DNN')
 
 '''
 for i in range(len(train_x)):
