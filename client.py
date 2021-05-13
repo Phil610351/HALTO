@@ -10,6 +10,6 @@ import json
 #while 1:
 load=dict()
 load['round']=1000
-r=requests.post('http://35.221.185.18:80', data = json.dumps(load))
+r=requests.post('http://34.80.232.139:80', data = json.dumps(load))
 #r=requests.post('http://127.0.0.1:80', data = json.dumps(tasks))
 print(json.loads(r.text)['t'])
