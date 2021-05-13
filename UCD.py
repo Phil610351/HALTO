@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=10
+users=15
 #B=1
 B=0.1
 N=1e-10
@@ -14,6 +14,7 @@ x_num=7
 def gen_task():
 	tasks=dict()
 	for i in range(users):
+		print(np.random.uniform(100,1000))
 		buf=dict()
 		buf['a']=np.random.uniform(100,1000)*2/1000
 		buf['d']=buf['a']
@@ -551,7 +552,8 @@ def draw_alpha():
 	plt.savefig('alpha.png', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_alpha()
+#draw_alpha()
+gen_task()
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 
