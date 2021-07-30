@@ -2,12 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=40
-B=1
+users=10
+B=3
 #B=0.3
 N=1e-10
-F=10
-avg=0.1
+F=12
 num=10
 x_num=7
 MEC=4
@@ -16,44 +15,61 @@ def gen_task():
 	tasks=dict()
 	for i in range(users):
 		buf=dict()
-		buf['a']=np.random.uniform(100,1000)*2/1000
-		buf['d']=buf['a']
-		buf['fl']=np.random.uniform(1.5,2.5)
-		buf['Tm']=np.random.uniform(avg,1)
-		buf['pri']=np.random.uniform(0.1,1)
+		buf['a']=np.random.uniform(100,1000)/1000
+		buf['d']=np.random.uniform(1000,2000)/1000
+		buf['fl']=np.random.uniform(1,2)
+		buf['Tm']=np.random.uniform(1,2)
+		buf['pri']=np.random.uniform(0.5,1)
 		buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
 		tasks[i]=buf
 	return tasks
 
 def caltech(tasks, xi):
 	reward=0
+	en=list()
+	for i in range(users):
+		en.append(i%MEC+1)
+
 	b=list()
+	f=list()
 
 	#sum of sqrt
-	ss=0
+	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
-		ss+=(xi[k]*v['a']*v['pri']/log2(1+v['SINR']))**0.5
+		ss[0]+=(xi[k]*v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5
+
+	for k,v in tasks.items():
+		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
 	#cal lagrange b
 	for k,v in tasks.items():
-		if ss!=0:
-			b.append(((xi[k]*v['a']*v['pri']/log2(1+v['SINR']))**0.5)*B/ss)
+		if ss[0]>0:
+			b.append( ((xi[k]*v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5)*B/ss[0] )
 		else:
 			b.append(0)
 
+	#cal lagrange f
+	for k,v in tasks.items():
+		if ss[en[k]]>0:
+			f.append( ((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]] )
+		else:
+			f.append(0)
+
 	for k,v in tasks.items():
 		if xi[k]!=0:
-			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']))
+			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
 		else:
 			t=(1-xi[k])*v['d']/v['fl']
+
 		if t<v['Tm']:
-			reward+=v['pri']*(1-t/(v['d']) )
+			reward+=v['pri']*(1-t/(v['Tm']) )
+		else:
+			reward-=v['pri']*0.5
 
 	return reward/users
 
-def assign(decision):
-
-	return
+#def optimal(tasks):
+#	return
 
 def iterative(tasks):
 	xi=list()
@@ -108,87 +124,84 @@ def iterative(tasks):
 def iterative2(tasks):
 	xi=list()
 	b=[0]*users
-	reserved_b=[0]*users
-	for e in tasks.values():
-		xi.append( 1-min(1,e['Tm']*e['fl']/e['d']) )
-	
-	tasks=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']-kv[1]['pri']/(kv[1]['a']/kv[1]['Tm']/log2(1+kv[1]['SINR'])))
+	f=[0]*users
+	en=list()
+	for i in range(users):
+		en.append(i%MEC+1)
 
-	#occupied bandwidth
-	remaining=B
-	for e in tasks:
-		#allocate minimum bandwidth
-		bi=xi[e[0]]*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
-		if remaining-bi<0:
-			break
-		else:
-			remaining-=bi
-			reserved_b[e[0]]=bi
+	for e in tasks.values():
+		xi.append( 1-min(1, e['Tm']*e['fl']/e['d']) )
 
 	#sum of sqrt
-	ss=0
-	for e in tasks:
-		ss+=(xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5
+	ss=[0]*(MEC+1)
+	for k,v in tasks.items():
+		ss[0]+=(v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5
 
-	for e in tasks:
-		b[e[0]]=reserved_b[e[0]] + ((xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5)*remaining/ss
+	for k,v in tasks.items():
+		ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
+
+	#cal lagrange b
+	for k,v in tasks.items():
+		if ss[0]>0:
+			b[k]=(((v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5)*B/ss[0])
+
+	#cal lagrange f
+	for k,v in tasks.items():
+		if ss[en[k]]!=0:
+			f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
 	i=0
 	while i<10:
 		#update x
-		for e in tasks:
-			if b[e[0]]!=0:
-				xi[e[0]]=e[1]['d']/e[1]['fl']/( e[1]['a']/(b[e[0]]*log2(1+e[1]['SINR'])) + e[1]['d']/e[1]['fl'] )
-			else:
-				xi[e[0]]=0
-
-		reserved_b=[0]*users		
-
-		#occupied bandwidth
-		remaining=B
-		for e in tasks:
-			#allocate minimum bandwidth
-			bi=xi[e[0]]*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
-			if remaining-bi<0:
-				break
-			else:
-				remaining-=bi
-				reserved_b[e[0]]=bi
+		for k,v in tasks.items():
+			xi[k]=v['d']/v['fl']/( v['a']/(b[k]*log2(1+v['SINR'])) + v['d']/f[k] + v['d']/v['fl'] )
 
 		#sum of sqrt
-		ss=0
-		for e in tasks:
-			ss+=(xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5
+		ss=[0]*(MEC+1)
+		for k,v in tasks.items():
+			ss[0]+=(xi[k]*v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5
 
-		#update b
-		for e in tasks:
-			b[e[0]]=reserved_b[e[0]] + ((xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5)*remaining/ss
+		for k,v in tasks.items():
+			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+		#cal lagrange b
+		for k,v in tasks.items():
+			if ss[0]>0:
+				b[k]=(((xi[k]*v['a']*v['pri']/v['Tm']/log2(1+v['SINR']))**0.5)*B/ss[0])
+
+		#cal lagrange f
+		for k,v in tasks.items():
+			if ss[en[k]]!=0:
+				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
 		i+=1
 
-	reward=0
-	for e in tasks:
-		if xi[e[0]]!=0:
-			t=max( (1-xi[e[0]])*e[1]['d']/e[1]['fl'], xi[e[0]]*e[1]['a']/b[e[0]]/log2(1+e[1]['SINR']))
-		else:
-			t=(1-xi[e[0]])*e[1]['d']/e[1]['fl']
-		if t<e[1]['Tm']:
-			reward+=e[1]['pri']*(1-t/e[1]['Tm'])*10
-		#else:
-		#	reward-=e[1]['pri']*10
-
-	return reward/users/10
+	return xi
 
 def greedy(tasks):
 	xi=[0]*users
+	tasks_s=sorted(tasks.items(), key=lambda kv: kv[1]['pri'])
+
+	for e in tasks_s:
+		buf=xi.copy()
+		buf[e[0]]=1
+		if caltech(tasks, buf)>caltech(tasks,xi):
+			xi=buf
+		else:
+			break
+	return xi
+
+def greedy2(tasks):
+	xi=[0]*users
 	b=[0]*users
 
-	tasks_s=sorted(tasks.items(), key=lambda kv: -kv[1]['pri'])
+	tasks_s=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/(kv[1]['a']/kv[1]['Tm']/log2(1+kv[1]['SINR'])))
 
 	#occupied bandwidth
 	remaining=B
 	for e in tasks_s:
 		#allocate bandwidth
-		bi=1*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
+		bi=2*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
 		if remaining-bi<0:
 			pass
 		else:
@@ -209,12 +222,15 @@ def PSO(tasks):
 		decision.append([])
 		velocity.append([])
 		for j in range(users):
-			if np.random.rand()<10/users:
+			if np.random.rand()<15/users:
 				decision[i].append(np.random.rand())
 				velocity[i].append(np.random.uniform(0.5,0.5))
 			else:
 				decision[i].append(0)
 				velocity[i].append(0)
+
+		#for j in range(users):
+		#	decision[i].append(np.random.randint(1,MEC+1))
 
 	#each particle's history
 	history=list()
@@ -240,7 +256,7 @@ def PSO(tasks):
 			cou+=1
 		else:
 			cou=0
-		
+
 		#update velocity & position
 		for i in range(particles):
 			for j in range(users):
@@ -251,7 +267,7 @@ def PSO(tasks):
 				if decision[i][j]<0:
 					decision[i][j]=0
 
-	print(glob_best)
+	#print(glob_best)
 	return glob_best[0]
 
 def GA_x(tasks):
@@ -457,11 +473,11 @@ def test():
 	for i in range(num):
 		tasks=gen_task()
 		perform[0]+=caltech(tasks, [0]*users)/num
-		perform[1]+=caltech(tasks, [1]*users)/num
+		perform[1]+=caltech(tasks, np.random.randint(1,MEC+1,users) )/num
 		perform[2]+=caltech(tasks, greedy(tasks))/num
 		perform[3]+=caltech(tasks, GA_x(tasks))/num
 		perform[4]+=caltech(tasks, PSO(tasks))/num
-		perform[5]+=iterative(tasks)/num
+		perform[5]+=caltech(tasks, iterative2(tasks))/num
 
 	return perform
 
@@ -550,8 +566,8 @@ def draw_alpha():
 	plt.savefig('alpha.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_alpha()
-#gen_task()
+draw_users()
+#print(test())
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 
@@ -562,3 +578,5 @@ draw_alpha()
 #4/7重新開工
 
 #4/8畫各alpha下的QoS值 B=0.1~1.3 QoS=0.3~0.5
+
+#7/30重新開工 更新alpha.jpg與多MEC
