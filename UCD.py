@@ -482,10 +482,10 @@ def draw_users():
 	plt.plot(x,result[1],"rp-",label='FRE')
 	plt.plot(x,result[0],"cx-",label='FLE')
 	plt.xlabel("Number of users")
-	plt.ylabel("QoS")
+	plt.ylabel("Average utility")
 	plt.legend()
 	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
-	plt.savefig('QoS.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('QoS.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
 def draw_avg():
@@ -511,10 +511,10 @@ def draw_avg():
 	plt.plot(x,result[1],"rp-",label='FRE')
 	plt.plot(x,result[0],"cx-",label='FLE')
 	plt.xlabel("Latency requirement")
-	plt.ylabel("QoS")
+	plt.ylabel("Average utility")
 	plt.legend()
 	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
-	plt.savefig('Tm.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('Tm.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
 def draw_alpha():
@@ -547,9 +547,9 @@ def draw_alpha():
 	plt.plot(x,result[1],"yD-",label='β=0.4')
 	plt.plot(x,result[0],"rp-",label='β=0.2')
 	plt.xlabel("Number of users")
-	plt.ylabel("QoS")
+	plt.ylabel("Average utility")
 	plt.legend()
-	plt.savefig('alpha.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('alpha.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
 #draw_alpha()

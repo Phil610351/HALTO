@@ -34,8 +34,10 @@ def draw():
 		route.create_text(100,500,text='task 13:  701.2M',fill='blue',font=('Arial', 12))
 		route.create_text(100,520,text='task 14:  229.7M',fill='blue',font=('Arial', 12))
 		route.create_text(100,540,text='task 15:  305.2M',fill='blue',font=('Arial', 12))
+		route.create_text(100,565,text='Workload',fill='green',font=('Arial', 14))
+		route.create_text(100,585,text='(# of CPU cycles)',fill='green',font=('Arial', 14))
 
-		route.create_text(275,625,text='task  3: 31.2%',fill='purple',font=('Arial', 12))
+		'''route.create_text(275,625,text='task  3: 31.2%',fill='purple',font=('Arial', 12))
 		route.create_text(275,645,text='task  7: 34.7%',fill='purple',font=('Arial', 12))
 		route.create_text(275,665,text='task 14: 34.0%',fill='purple',font=('Arial', 12))
 
@@ -54,7 +56,7 @@ def draw():
 		route.create_text(725,665,text='task 12: 13.6%',fill='purple',font=('Arial', 12))
 		route.create_text(725,685,text='task 15: 27.3%',fill='purple',font=('Arial', 12))
 
-		'''for i in range(11):
+		for i in range(11):
 			sleep(1)
 			for e in c:
 				route.delete(e)

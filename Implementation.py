@@ -509,7 +509,7 @@ def draw_users():
 	plt.ylabel("QoS")
 	plt.legend()
 	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
-	plt.savefig('QoS.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('QoS.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
 def draw_avg():
@@ -538,7 +538,7 @@ def draw_avg():
 	plt.ylabel("QoS")
 	plt.legend()
 	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
-	plt.savefig('Tm.png', dpi = 600, bbox_inches='tight')
+	plt.savefig('Tm.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
 #print(test())
