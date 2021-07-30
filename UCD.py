@@ -2,19 +2,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=15
-#B=1
-B=0.1
+users=40
+B=1
+#B=0.3
 N=1e-10
 F=10
 avg=0.1
-num=100
+num=10
 x_num=7
+MEC=4
 
 def gen_task():
 	tasks=dict()
 	for i in range(users):
-		print(np.random.uniform(100,1000))
 		buf=dict()
 		buf['a']=np.random.uniform(100,1000)*2/1000
 		buf['d']=buf['a']
@@ -50,6 +50,10 @@ def caltech(tasks, xi):
 			reward+=v['pri']*(1-t/(v['d']) )
 
 	return reward/users
+
+def assign(decision):
+
+	return
 
 def iterative(tasks):
 	xi=list()
@@ -205,7 +209,7 @@ def PSO(tasks):
 		decision.append([])
 		velocity.append([])
 		for j in range(users):
-			if np.random.rand()<15/users:
+			if np.random.rand()<10/users:
 				decision[i].append(np.random.rand())
 				velocity[i].append(np.random.uniform(0.5,0.5))
 			else:
@@ -247,7 +251,7 @@ def PSO(tasks):
 				if decision[i][j]<0:
 					decision[i][j]=0
 
-	#print(glob_best)
+	print(glob_best)
 	return glob_best[0]
 
 def GA_x(tasks):
@@ -257,7 +261,7 @@ def GA_x(tasks):
 		for a in range(size):
 			decision=list()
 			for b in range(users):
-				if np.random.rand()<15/users:
+				if np.random.rand()<10/users:
 					decision.append(np.random.rand())
 				else:
 					decision.append(0)
@@ -302,7 +306,7 @@ def GA_x(tasks):
 				table.append(bb)
 				Maternal.append([bb, caltech(tasks,bb)])
 
-			if np.random.rand()<0.1:
+			if np.random.rand()<0.16:
 				muta1, muta2=list(), list()
 				tar=np.random.randint(len(aa))
 				for i in range(len(aa)):
@@ -323,7 +327,7 @@ def GA_x(tasks):
 			for i in range(1, len(Maternal)-len(rank)+1):
 				Maternal.pop(Maternal.index(rank[-i]))
 
-	generate(200)
+	generate(300)
 	cou=0
 	st1=0
 	while 1:
@@ -333,8 +337,9 @@ def GA_x(tasks):
 			total+=e[1]
 		for i in range(len(Roulette)):
 			Roulette[i][1]/=total
-		crossover(10, sorted(Roulette, key=lambda kv: -kv[1]))
-		if sorted(Maternal, key=lambda kv: -kv[1])[0][1]-st1<0.1:
+		crossover(25, sorted(Roulette, key=lambda kv: -kv[1]))
+
+		if sorted(Maternal, key=lambda kv: -kv[1])[0][1]-st1<0.001:
 			cou+=1
 		else:
 			st1=sorted(Maternal, key=lambda kv: -kv[1])[0][1]
@@ -352,7 +357,7 @@ def GA(tasks):
 		for a in range(size):
 			decision=list()
 			for b in range(users):
-				if np.random.rand()<15/users:
+				if np.random.rand()<10/users:
 					decision.append(np.random.rand())
 				else:
 					decision.append(0)
@@ -368,7 +373,7 @@ def GA(tasks):
 					decision+='1'
 				else:
 					decision+='0'
-			Maternal[decision]=cal_reward(tasks, decision)
+			Maternal[decision]=caltech(tasks, decision)
 
 	def crossover(pairs, rank):
 		parent=set()
@@ -402,9 +407,9 @@ def GA(tasks):
 				aa+=a[j]
 				bb+=b[j]
 			if aa not in Maternal:
-				Maternal[aa]=cal_reward(tasks,aa)
+				Maternal[aa]=caltech(tasks,aa)
 			if bb not in Maternal:
-				Maternal[bb]=cal_reward(tasks,bb)
+				Maternal[bb]=caltech(tasks,bb)
 
 			if np.random.rand()<0.06:
 				muta1, muta2='', ''
@@ -417,9 +422,9 @@ def GA(tasks):
 						muta1+=str(np.random.randint(2))
 						muta2+=str(np.random.randint(2))
 				if muta1 not in Maternal:
-					Maternal[muta1]=cal_reward(tasks, muta1)
+					Maternal[muta1]=caltech(tasks, muta1)
 				if muta2 not in Maternal:
-					Maternal[muta2]=cal_reward(tasks, muta2)
+					Maternal[muta2]=caltech(tasks, muta2)
 
 		if len(Maternal)>len(rank):
 			for i in range(1, len(Maternal)-len(rank)+1):
@@ -520,40 +525,33 @@ def draw_avg():
 def draw_alpha():
 	global users
 	global B
-	x=list()
-	for e in range(x_num):
-		x.append(users)
-		users+=10
+	x=[0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75]
 
 	result=list()
-	for e in range(5):
+	for e in range(6):
 		result.append([])
 
-	for a in range(5):
-		users=10
-		for b in range(x_num):
-			perform=0
-			for c in range(num):
-				tasks=gen_task()
-				perform+=iterative(tasks)/num
-			result[a].append(perform)
-			users+=10
-		B+=0.3
-		print(B)
+	for e in range(x_num):
+		perform=test()
+		for i in range(6):
+			result[i].append(perform[i])
 
-	plt.plot(x,result[4],"go-",label='β=1.0')
-	plt.plot(x,result[3],"b*-",label='β=0.8')
-	plt.plot(x,result[2],"ks-",label='β=0.6')
-	plt.plot(x,result[1],"yD-",label='β=0.4')
-	plt.plot(x,result[0],"rp-",label='β=0.2')
-	plt.xlabel("Number of users")
+		B+=0.25
+
+	plt.plot(x,result[5],"go-",label='SS')
+	plt.plot(x,result[4],"b*-",label='PSO')
+	plt.plot(x,result[3],"ks-",label='GA')
+	plt.plot(x,result[2],"yD-",label='Greedy')
+	plt.plot(x,result[1],"rp-",label='FRE')
+	plt.plot(x,result[0],"cx-",label='FLE')
+	plt.xlabel("β")
 	plt.ylabel("Average utility")
 	plt.legend()
 	plt.savefig('alpha.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-#draw_alpha()
-gen_task()
+draw_alpha()
+#gen_task()
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 
