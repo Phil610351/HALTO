@@ -14,88 +14,143 @@ traffic=[29, 32, 39, 43, 50, 38, 38, 22, 12, 6, 3, 2, 3, 3, 7, 12, 15, 20, 28, 2
 history=6
 epsilon=1
 gamma=0.9
-zeta=150
-
+zeta=10
+MEC=1
+B=1
 N=1e-10
 F=10
 
 num=40
 
-def cal_profit(users, action):
+def cal_profit(users, current, action):
 
 	def gen_task():
 		tasks=dict()
 		for i in range(users):
 			buf=dict()
-			buf['a']=np.random.uniform(100,1000)*2/1000
-			buf['d']=buf['a']
-			buf['fl']=np.random.uniform(1.5,2.5)
-			buf['Tm']=np.random.uniform(0.1,1)
-			buf['pri']=np.random.uniform(0.1,1)*5
+			buf['a']=np.random.uniform(100,1000)/1000
+			buf['d']=np.random.uniform(1000,2000)/1000
+			buf['fl']=np.random.uniform(1,2)
+			buf['Tm']=np.random.uniform(0.5,1.5)
+			buf['pri']=np.random.uniform(0.5,1)
 			buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
 			tasks[i]=buf
 		return tasks
 
-	def iterative(tasks):
-		#B=0.1+action*0.3
-		B=action
+	def caltech(tasks, xi):
+		reward=0
+		en=list()
+		for i in range(users):
+			en.append(i%MEC+1)
 
+		b=[0]*users
+		f=[0]*users
+
+		#sum of sqrt
+		ss=[0]*(MEC+1)
+		for k,v in tasks.items():
+			ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
+
+		for k,v in tasks.items():
+			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+		#cal lagrange b
+		for k,v in tasks.items():
+			if ss[0]>0:
+				b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
+			else:
+				b[k]=0
+
+		#cal lagrange f
+		for k,v in tasks.items():
+			if ss[en[k]]>0:
+				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+			else:
+				f[k]=0
+
+		for k,v in tasks.items():
+			if xi[k]>0:
+				t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
+			else:
+				t=(1-xi[k])*v['d']/v['fl']
+
+			if t<v['Tm']:
+				reward+=v['pri']*(1-t/(v['Tm']) )
+			else:
+				reward-=v['pri']*0.5
+
+		return reward/users
+
+	def iterative(tasks):
 		xi=list()
 		b=[0]*users
-		reserved_b=[0]*users
+		f=[0]*users
+		en=list()
+		for i in range(users):
+			en.append(i%MEC+1)
+
 		for e in tasks.values():
-			xi.append( 1-min(1,e['Tm']*e['fl']/e['d']) )
-		
-		tasks=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/(kv[1]['a']/kv[1]['Tm']/log2(1+kv[1]['SINR'])) )
+			xi.append( 1-min(1, e['Tm']*e['fl']/e['d']) )
 
-		#occupied bandwidth
-		remaining=B
-		for e in tasks:
-			#allocate minimum bandwidth
-			bi=xi[e[0]]*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
-			if remaining-bi<0:
-				break
-			else:
-				remaining-=bi
-				reserved_b[e[0]]=bi
+		#sum of sqrt
+		ss=[0]*(MEC+1)
+		for k,v in tasks.items():
+			ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
 
-		for e in tasks:
-			b[e[0]]=reserved_b[e[0]] + remaining/users
+		for k,v in tasks.items():
+			ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
+
+		#cal lagrange b
+		for k,v in tasks.items():
+			if ss[0]>0:
+				b[k]=(((v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
+
+		#cal lagrange f
+		for k,v in tasks.items():
+			if ss[en[k]]!=0:
+				f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
 		i=0
 		while i<10:
 			#update x
-			for e in tasks:
-				xi[e[0]]=e[1]['d']/e[1]['fl']/( e[1]['a']/(b[e[0]]*log2(1+e[1]['SINR'])) + e[1]['d']/e[1]['fl'] )
+			for k,v in tasks.items():
+				xi[k]=v['d']/v['fl']/( v['a']/(b[k]*log2(1+v['SINR'])) + v['d']/f[k] + v['d']/v['fl'] )
 
 			#sum of sqrt
-			ss=0
-			for e in tasks:
-				ss+=(xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5
+			ss=[0]*(MEC+1)
+			for k,v in tasks.items():
+				ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
 
-			#update b
-			for e in tasks:
-				b[e[0]]=reserved_b[e[0]] + ((xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5)*remaining/ss
+			for k,v in tasks.items():
+				ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+			#cal lagrange b
+			for k,v in tasks.items():
+				if ss[0]>0:
+					b[k]=(((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
+
+			#cal lagrange f
+			for k,v in tasks.items():
+				if ss[en[k]]!=0:
+					f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
 			i+=1
 
-		reward=0
-		for e in tasks:
-			if xi[e[0]]!=0:
-				t=max( (1-xi[e[0]])*e[1]['d']/e[1]['fl'], xi[e[0]]*e[1]['a']/b[e[0]]/log2(1+e[1]['SINR']))
-			else:
-				t=(1-xi[e[0]])*e[1]['d']/e[1]['fl']
+		return xi
 
-			if t<e[1]['Tm']:
-				reward+=e[1]['pri']*(1-t/(e[1]['d']) )
-		
-		return reward/users
-
-	QoS=iterative(gen_task())
+	tasks=gen_task()
+	QoS=caltech(tasks, iterative(tasks))
 	revenue=users*QoS*4
 
 	#profit
+	if current==action:
+		cost=(abs(current-action)*2/10)+0.2
+	else:
+		cost=(abs(current-action)*2/10)
+	print(revenue,cost,current,action)
 	#return revenue-zeta*(0.1+action*0.3)/1.3
-	return revenue-zeta*action/1.3
+	#return revenue-zeta*action/1.3
+	return revenue-cost
 
 #DRL
 def DQL():
@@ -134,8 +189,11 @@ def DQL():
 			if episode>0.01:
 				epsilon-=(1-0.01)/10000
 
-			target_Q=DNN.predict(np.array([state]))[0]
-			Q[str(state)][action]=(cal_profit(traffic[i+1], action) + Q[str(state)][action]*episode )/(episode+1)
+			target_Q=Q[str(state)]
+			print(target_Q)
+			#target_Q=DNN.predict(np.array([state]))[0]
+			#Q=r+gammaQmax
+			Q[str(state)][action]=( cal_profit(traffic[i+1], action) + Q[str(state)][action]*episode )/(episode+1)
 			target_Q[action]=Q[str(state)][action]
 			exp_y.append(target_Q)
 		
@@ -208,6 +266,7 @@ def QL():
 	#一個episode
 	def play(episode):
 		global epsilon
+		current=0
 		for i in range(history, len(traffic)-1):
 			state=str(traffic[i-history:i])
 			#epsilon-greedy
@@ -226,12 +285,13 @@ def QL():
 			if episode>0.01:
 				epsilon-=(1-0.01)/10000
 
-			Q[state][action]=(cal_profit(traffic[i+1], action) + Q[state][action]*episode )/(episode+1)
-
+			Q[state][action]=(cal_profit(traffic[i+1], current, action) + Q[state][action]*episode )/(episode+1)
+			current=action
 	#放現在的agent進去玩
 	def exam():
 		profit=list()
 		perform=0
+		current=0
 		for i in range(history, len(traffic)-1):
 			state=str(traffic[i-history:i])
 			best, action= 0, 0
@@ -244,7 +304,8 @@ def QL():
 
 			#for e in range(num):
 			#	perform+=cal_profit(traffic[i+1], action)/traffic[i+1]/num
-			profit.append(cal_profit(traffic[i+1], action)/traffic[i+1])
+			profit.append(cal_profit(traffic[i+1], current, action)/traffic[i+1])
+			current=action
 
 		#return sum(profit)
 		#return perform/len(traffic)
@@ -260,21 +321,21 @@ def QL():
 		while episode<1750:
 			play(episode)
 			#test revenue
-			#if episode%5==0 or episode<30:
-			#	x.append(episode)
-			#	result.append(exam())
+			if episode%5==0 or episode<30:
+				x.append(episode)
+				result.append(exam())
 			episode+=1
 
 		print(exam())
 
-		'''print(x)
+		print(x)
 		print(result)
 		plt.plot(x,result,"go-",label='unit_profit')
 		plt.xlabel("epochs")
 		plt.ylabel("unit_profit")
 		plt.legend()
 		plt.savefig('unit_profit_QL.jpg', dpi=600, bbox_inches='tight')
-		plt.show()'''
+		plt.show()
 
 	main()
 
@@ -330,6 +391,7 @@ def draw_steps():
 	plt.savefig('steps.jpg', dpi=600, bbox_inches='tight')
 	plt.show()
 
+QL()
 #draw_realtime()
 #draw_steps()
 
