@@ -18,7 +18,7 @@ def gen_task():
 	for i in range(users):
 		buf=dict()
 		buf['a']=np.random.uniform(100,1000)/1000
-		#buf['d']=np.random.uniform(100,2000)/1000
+		buf['d']=np.random.uniform(1000,2000)/1000
 		buf['d']=buf['a']
 		buf['fl']=1
 		buf['Tm']=np.random.uniform(0.1,1)
@@ -476,12 +476,7 @@ def test():
 		perform[4]+=cal_real(tasks, PSO(tasks))/num
 		perform[5]+=iterative2(tasks)/num
 		print(i)
-		'''perform[0]+=caltech(tasks, [0]*users)/num
-		perform[1]+=caltech(tasks, [1]*users)/num
-		perform[2]+=caltech(tasks, greedy(tasks))/num
-		perform[3]+=caltech(tasks, GA_x(tasks))/num
-		perform[4]+=caltech(tasks, PSO(tasks))/num'''
-
+		
 	return perform
 
 def draw_users():

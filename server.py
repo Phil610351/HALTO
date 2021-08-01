@@ -5,16 +5,16 @@ app = Flask(__name__)
 
 @app.route('/',methods=['POST'])
 def test():
-    tasks=request.get_json(force=True)
-    result=list()
-    for i in range(len(tasks)):
-        start=time()
-        for j in range(tasks[str(i)]):
-            f=open('realtime.jpg', 'rb')
-            b=f.read()
-            d=open('test.png', 'wb')
-            d.write(b)
-        result.append(time()-start)
+    req=request.get_json(force=True)
+    print(req)
+    start=time()
+    result=dict()
+    for i in range(req['round']):
+        f=open('realtime.jpg', 'rb')
+        b=f.read()
+        d=open('test.png', 'wb')
+        d.write(b)
+    result['t']=time()-start
     return jsonify(result)
 
 if __name__ == "__main__":

@@ -610,15 +610,9 @@ draw_users()
 #print(test())
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
-
 #2/25: iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty)
-
 #2/28: iterative/PSO:1.21, iterative/greedy: 1.57
-
 #4/7重新開工
-
 #4/8畫各alpha下的QoS值 B=0.1~1.3 QoS=0.3~0.5
-
 #7/30重新開工 更新alpha.jpg與多MEC
-
 #8/1 alpha圖: B=0.1, B+=0.3, F=100, users=40, beta圖: B=1, F=20, F+=20, users=40, user圖:
