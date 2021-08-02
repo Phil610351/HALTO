@@ -59,7 +59,7 @@ def caltech(tasks, xi):
 		if xi[k]>0:
 			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
 		else:
-			t=(1-xi[k])*v['d']/v['fl']
+			t=v['d']/v['fl']
 
 		if t<v['Tm']:
 			reward+=v['pri']*(1-t/(v['Tm']) )
@@ -271,7 +271,6 @@ def PSO(tasks):
 				if decision[i][j]<0:
 					decision[i][j]=0
 
-	#print(glob_best)
 	return glob_best[0]
 
 def GA_x(tasks):
