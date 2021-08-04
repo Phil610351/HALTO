@@ -11,7 +11,7 @@ import numpy as np
 #302
 traffic=[29, 32, 39, 43, 50, 38, 38, 22, 12, 6, 3, 2, 3, 3, 7, 12, 15, 20, 28, 26, 33, 39, 36, 44, 30, 36, 41, 50, 48, 45, 32, 22, 12, 7, 4, 2, 1, 3, 7, 13, 25, 30, 28, 37, 39, 42, 47, 38, 32, 43, 45, 44, 49, 51, 42, 31, 19, 9, 5, 3, 2, 3, 6, 13, 19, 27, 27, 32, 43, 47, 55, 46, 35, 36, 39, 43, 38, 46, 37, 29, 23, 15, 6, 2, 1, 2, 4, 6, 13, 18, 26, 35, 37, 37, 36, 43, 39, 37, 48, 43, 43, 40, 35, 31, 21, 14, 6, 3, 2, 2, 3, 7, 11, 17, 25, 34, 40, 41, 43, 38, 26, 32, 41, 36, 43, 52, 39, 28, 20, 13, 6, 4, 3, 3, 7, 17, 24, 26, 37, 34, 39, 38, 46, 44, 37, 38, 47, 48, 52, 59, 46, 30, 16, 9, 3, 2, 3, 3, 6, 16, 19, 23, 26, 32, 33, 39, 44, 43, 33, 41, 42, 39, 51, 57, 44, 28, 20, 10, 5, 2, 1, 3, 6, 12, 23, 28, 27, 34, 35, 48, 50, 49, 36, 44, 45, 44, 49, 51, 48, 32, 20, 12, 5, 4, 2, 3, 6, 15, 19, 19, 33, 33, 33, 43, 46, 39, 35, 42, 48, 47, 51, 63, 50, 35, 24, 14, 6, 3, 2, 2, 6, 14, 22, 29, 26, 33, 42, 48, 48, 42, 37, 41, 41, 38, 41, 40, 33, 26, 22, 12, 5, 3, 1, 2, 3, 9, 14, 20, 22, 29, 33, 35, 38, 41, 35, 38, 38, 42, 42, 42, 36, 31, 24, 17, 9, 5, 4, 3, 3, 3, 10, 16, 21, 29, 33, 39, 42, 39, 32, 46, 49, 52, 52, 57, 45, 32, 20, 10, 3, 4, 3, 2]
 
-history=6
+history=5
 epsilon=1
 gamma=0.9
 zeta=150
@@ -19,7 +19,7 @@ zeta=150
 N=1e-10
 F=10
 B=1
-num=40
+num=1
 
 def cal_profit(users, action):
 
@@ -105,13 +105,13 @@ def DQL():
 	DNN=Sequential()
 	DNN.add(Dense(64, input_shape=(history,)) )
 	DNN.add(Dense(64, activation="relu"))
-	DNN.add(Dense(5))
+	DNN.add(Dense(10))
 	DNN.compile(loss='mae', optimizer='adam', metrics=['mae'])
 
 	def init():
 		for i in range(history, len(traffic)-1):
 			Q[str(traffic[i-history:i])]=dict()
-			for e in range(5):
+			for e in range(10):
 				Q[str(traffic[i-history:i])][e]=0
 
 
@@ -124,7 +124,7 @@ def DQL():
 
 			#epsilon-greedy
 			if np.random.rand()<epsilon:
-				action=np.random.randint(5)
+				action=np.random.randint(10)
 
 			else:
 				action=DNN.predict(np.array([state]))[0]
@@ -170,7 +170,7 @@ def DQL():
 
 		x, result=list(), list()
 
-		while episode<1000:
+		while episode<300:
 			play(episode)
 
 			#test revenue

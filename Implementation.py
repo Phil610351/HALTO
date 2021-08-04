@@ -3,7 +3,6 @@ import numpy as np
 import requests
 import json
 from math import log2
-from time import time
 
 users=40
 B=1
@@ -46,23 +45,15 @@ def cal_real(tasks, xi):
 	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
 		ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-	for k,v in tasks.items():
 		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
-	#cal lagrange b
 	for k,v in tasks.items():
+		#cal lagrange b
 		if ss[0]>0:
 			b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
-		else:
-			b[k]=0
-
-	#cal lagrange f
-	for k,v in tasks.items():
+		#cal lagrange f
 		if ss[en[k]]>0:
 			f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)/ss[en[k]]
-		else:
-			f[k]=0
 
 	for k,v in tasks.items():
 		if xi[k]>0:
@@ -98,23 +89,15 @@ def caltech(tasks, xi):
 	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
 		ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-	for k,v in tasks.items():
 		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
-	#cal lagrange b
 	for k,v in tasks.items():
+		#cal lagrange b
 		if ss[0]>0:
 			b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
-		else:
-			b[k]=0
-
-	#cal lagrange f
-	for k,v in tasks.items():
+		#cal lagrange f
 		if ss[en[k]]>0:
 			f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
-		else:
-			f[k]=0
 
 	for k,v in tasks.items():
 		if xi[k]>0:

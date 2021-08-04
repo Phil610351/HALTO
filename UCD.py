@@ -37,23 +37,15 @@ def caltech(tasks, xi):
 	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
 		ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-	for k,v in tasks.items():
 		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
-	#cal lagrange b
 	for k,v in tasks.items():
+		#cal lagrange b
 		if ss[0]>0:
 			b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
-		else:
-			b[k]=0
-
-	#cal lagrange f
-	for k,v in tasks.items():
+		#cal lagrange f
 		if ss[en[k]]>0:
 			f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
-		else:
-			f[k]=0
 
 	for k,v in tasks.items():
 		if xi[k]>0:
@@ -68,60 +60,42 @@ def caltech(tasks, xi):
 
 	return reward/users
 
-#def optimal(tasks):
-#	return
+def optimal():
+	for i in range(3**8):
+		a=i
+		en=list()
+		while a!=0:
+			en.append(a%3)
+			a/=3
+		print(i,en)
+		print('\n')
+	return
+
+def optimal2(tasks):
+	M_d=[0,0]
+	def search(state, decision):
+		if len(decision)==len(state):
+			r=caltech(state, decision)
+			if r>M_d[0]:
+				M_d[0]=r
+				M_d[1]=decision
+			return
+
+		if len(decision)==int(len(state)/2):
+			r=cal_reward(state, decision)
+			if r<M_d[0]/2.4:
+				return
+
+		for i in range(1, MEC+1):
+			search(state, decision+str(i))
+
+	search(state, '')
+	action=[0]*(users*(MEC+1))
+	for i in range(users):
+		action[i*(MEC+1)+int(M_d[1][i])]=1
+	return M_d[1], action
 
 def iterative(tasks):
-	xi=list()
-	b=[0]*users
-	reserved_b=[0]*users
-	for e in tasks.values():
-		xi.append( 1-min(1,e['Tm']*e['fl']/e['d']) )
-	
-	tasks=sorted(tasks.items(), key=lambda kv: -kv[1]['pri']/(kv[1]['a']/kv[1]['Tm']/log2(1+kv[1]['SINR'])) )
-
-	#occupied bandwidth
-	remaining=B
-	for e in tasks:
-		#allocate minimum bandwidth
-		bi=xi[e[0]]*e[1]['a']/e[1]['Tm']/log2(1+e[1]['SINR'])
-		if remaining-bi<0:
-			break
-		else:
-			remaining-=bi
-			reserved_b[e[0]]=bi
-
-	for e in tasks:
-		b[e[0]]=reserved_b[e[0]] + remaining/users
-
-	i=0
-	while i<10:
-		#update x
-		for e in tasks:
-			xi[e[0]]=e[1]['d']/e[1]['fl']/( e[1]['a']/(b[e[0]]*log2(1+e[1]['SINR'])) + e[1]['d']/e[1]['fl'] )
-
-
-		#sum of sqrt
-		ss=0
-		for e in tasks:
-			ss+=(xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5
-
-		#update b
-		for e in tasks:
-			b[e[0]]=reserved_b[e[0]] + ((xi[e[0]]*e[1]['a']*e[1]['pri']/log2(1+e[1]['SINR']))**0.5)*remaining/ss
-		i+=1
-
-	reward=0
-	for e in tasks:
-		if xi[e[0]]!=0:
-			t=max( (1-xi[e[0]])*e[1]['d']/e[1]['fl'], xi[e[0]]*e[1]['a']/b[e[0]]/log2(1+e[1]['SINR']))
-		else:
-			t=(1-xi[e[0]])*e[1]['d']/e[1]['fl']
-		if t<e[1]['Tm']:
-			reward+=e[1]['pri']*(1-t/(e[1]['d']) )
-	return reward/users
-
-def iterative2(tasks):
 	xi=list()
 	b=[0]*users
 	f=[0]*users
@@ -136,17 +110,13 @@ def iterative2(tasks):
 	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
 		ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-	for k,v in tasks.items():
 		ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
 
-	#cal lagrange b
 	for k,v in tasks.items():
+		#cal lagrange b
 		if ss[0]>0:
 			b[k]=(((v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
-
-	#cal lagrange f
-	for k,v in tasks.items():
+		#cal lagrange f
 		if ss[en[k]]!=0:
 			f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
@@ -160,17 +130,13 @@ def iterative2(tasks):
 		ss=[0]*(MEC+1)
 		for k,v in tasks.items():
 			ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-		for k,v in tasks.items():
 			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
-		#cal lagrange b
 		for k,v in tasks.items():
+			#cal lagrange b
 			if ss[0]>0:
 				b[k]=(((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
-
-		#cal lagrange f
-		for k,v in tasks.items():
+			#cal lagrange f
 			if ss[en[k]]!=0:
 				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
@@ -480,7 +446,7 @@ def test():
 		perform[2]+=caltech(tasks, greedy(tasks))/num
 		perform[3]+=caltech(tasks, GA_x(tasks))/num
 		perform[4]+=caltech(tasks, PSO(tasks))/num
-		perform[5]+=caltech(tasks, iterative2(tasks))/num
+		perform[5]+=caltech(tasks, iterative(tasks))/num
 
 	return perform
 
@@ -605,8 +571,7 @@ def draw_beta():
 	plt.savefig('beta.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_users()
-#print(test())
+optimal()
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 #2/25: iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty)
@@ -615,3 +580,4 @@ draw_users()
 #4/8畫各alpha下的QoS值 B=0.1~1.3 QoS=0.3~0.5
 #7/30重新開工 更新alpha.jpg與多MEC
 #8/1 alpha圖: B=0.1, B+=0.3, F=100, users=40, beta圖: B=1, F=20, F+=20, users=40, user圖:
+#8/3 optimal
