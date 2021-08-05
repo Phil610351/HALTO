@@ -16,282 +16,31 @@ zeta=10
 MEC=1
 B=1
 N=1e-10
+F=100
+Q=dict()
 
 Realtime='SS'
 
 num=1
 
+def gen_task(users):
+	tasks=dict()
+	for i in range(users):
+		buf=dict()
+		buf['a']=np.random.uniform(100,1000)/1000
+		buf['d']=np.random.uniform(1000,2000)/1000
+		buf['fl']=np.random.uniform(1,2)
+		buf['Tm']=np.random.uniform(0.5,1.5)
+		buf['pri']=np.random.uniform(0.5,1)
+		buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
+		tasks[i]=buf
+	return tasks
+
 def cal_profit(users, current, action, method):
 	global F
 	F=140*(action+1)/10
 
-	def gen_task():
-		tasks=dict()
-		for i in range(users):
-			buf=dict()
-			buf['a']=np.random.uniform(100,1000)/1000
-			buf['d']=np.random.uniform(1000,2000)/1000
-			buf['fl']=np.random.uniform(1,2)
-			buf['Tm']=np.random.uniform(0.5,1.5)
-			buf['pri']=np.random.uniform(0.5,1)
-			buf['SINR']=(10**np.random.uniform(4,10))*7.5/N
-			tasks[i]=buf
-		return tasks
-
-	def caltech(tasks, xi):
-		reward=0
-		en=list()
-		for i in range(users):
-			en.append(i%MEC+1)
-
-		b=[0]*users
-		f=[0]*users
-
-		#sum of sqrt
-		ss=[0]*(MEC+1)
-		for k,v in tasks.items():
-			ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
-
-		for k,v in tasks.items():
-			#cal lagrange b
-			if ss[0]>0:
-				b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
-			#cal lagrange f
-			if ss[en[k]]>0:
-				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
-
-		for k,v in tasks.items():
-			if xi[k]>0:
-				t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
-			else:
-				t=v['d']/v['fl']
-
-			if t<v['Tm']:
-				reward+=v['pri']*(1-t/(v['Tm']) )
-			else:
-				reward-=v['pri']*0.5
-
-		return reward/users
-
-	def iterative(tasks):
-		xi=list()
-		b=[0]*users
-		f=[0]*users
-		en=list()
-		for i in range(users):
-			en.append(i%MEC+1)
-
-		for e in tasks.values():
-			xi.append( 1-min(1, e['Tm']*e['fl']/e['d']) )
-
-		#sum of sqrt
-		ss=[0]*(MEC+1)
-		for k,v in tasks.items():
-			ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-			ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
-		
-		for k,v in tasks.items():
-			#cal lagrange b
-			if ss[0]>0:
-				b[k]=(((v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
-			#cal lagrange f
-			if ss[en[k]]!=0:
-				f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
-
-		i=0
-		while i<10:
-			#update x
-			for k,v in tasks.items():
-				xi[k]=v['d']/v['fl']/( v['a']/(b[k]*log2(1+v['SINR'])) + v['d']/f[k] + v['d']/v['fl'] )
-
-			#sum of sqrt
-			ss=[0]*(MEC+1)
-			for k,v in tasks.items():
-				ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-				ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
-
-			for k,v in tasks.items():
-				#cal lagrange b
-				if ss[0]>0:
-					b[k]=(((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
-				#cal lagrange f
-				if ss[en[k]]>0:
-					f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
-
-			i+=1
-
-		return xi
-
-	def greedy(tasks):
-		xi=[0]*users
-		tasks_s=sorted(tasks.items(), key=lambda kv: kv[1]['pri']/(kv[1]['d']/kv[1]['Tm']))
-
-		for e in tasks_s:
-			buf=xi.copy()
-			buf[e[0]]=1
-			if caltech(tasks, buf)>caltech(tasks, xi):
-				xi=buf
-			else:
-				break
-		return xi
-
-	def PSO(tasks):
-		particles=200
-		#a single particle (solution vector)
-		decision=list()
-		#particle's v
-		velocity=list()
-
-		#initialize
-		for i in range(particles):
-			decision.append([])
-			velocity.append([])
-			for j in range(users):
-				if np.random.rand()<15/users:
-					decision[i].append(np.random.rand())
-					velocity[i].append(np.random.uniform(0.5,0.5))
-				else:
-					decision[i].append(0)
-					velocity[i].append(0)
-
-			#for j in range(users):
-			#	decision[i].append(np.random.randint(1,MEC+1))
-
-		#each particle's history
-		history=list()
-		for i in range(particles):
-			history.append([decision[i],-100])
-		glob_best=[decision[-1],-100]
-		
-		cou=0
-		while cou<10:
-			#cal fitness & update
-			best=glob_best[1]
-			for i in range(particles):
-
-				value=caltech(tasks, decision[i])
-				if value > history[i][1]:
-					history[i][0]=decision[i]
-					history[i][1]=value
-				if value > glob_best[1]:
-					glob_best[0]=decision[i]
-					glob_best[1]=value
-
-			if best==glob_best[1]:
-				cou+=1
-			else:
-				cou=0
-
-			#update velocity & position
-			for i in range(particles):
-				for j in range(users):
-					velocity[i][j]=velocity[i][j]+0.001*(history[i][0][j]-decision[i][j])+0.001*(glob_best[0][j]-decision[i][j])
-					decision[i][j]+=velocity[i][j]
-					if decision[i][j]>1:
-						decision[i][j]=1
-					if decision[i][j]<0:
-						decision[i][j]=0
-
-		return glob_best[0]
-
-	def GA_x(tasks):
-		Maternal=list()
-		table=list()
-		def generate(size):
-			for a in range(size):
-				decision=list()
-				for b in range(users):
-					if np.random.rand()<15/users:
-						decision.append(np.random.rand())
-					else:
-						decision.append(0)
-
-				table.append(decision)
-				Maternal.append([decision, caltech(tasks, decision)])
-
-		def crossover(pairs, rank):
-			parent=list()
-			for e in range(2*pairs):
-				a=np.random.rand()
-				if a<rank[0][1]:
-					parent.append(rank[0][0])
-				else:
-					accu=rank[0][1]
-					for i in range(1, len(rank)):
-						if a>accu and a<accu+rank[i][1]:
-							parent.append(rank[i][0])
-							break
-						else:
-							accu+=rank[i][1]
-
-			while len(parent)>2:
-				a=parent.pop()
-				b=parent.pop()
-				start=np.random.randint(len(a))
-				end=np.random.randint(start,len(a))
-
-				aa,bb=list(),list()
-				for j in range(users):
-					if j not in range(start, end):
-						aa.append(a[j])
-						bb.append(b[j])
-					else:
-						aa.append(b[j])
-						bb.append(a[j])
-
-				if aa not in table:
-					table.append(aa)
-					Maternal.append([aa, caltech(tasks,aa)])
-				if bb not in table:
-					table.append(bb)
-					Maternal.append([bb, caltech(tasks,bb)])
-
-				if np.random.rand()<0.16:
-					muta1, muta2=list(), list()
-					tar=np.random.randint(len(aa))
-					for i in range(len(aa)):
-						if i!=tar:
-							muta1.append(aa[i])
-							muta2.append(bb[i])
-						else:
-							muta1.append(np.random.rand())
-							muta2.append(np.random.rand())
-					if muta1 not in table:
-						table.append(muta1)
-						Maternal.append([muta1, caltech(tasks,muta1)])
-					if muta2 not in table:
-						table.append(muta2)
-						Maternal.append([muta2, caltech(tasks,muta2)])
-
-			if len(Maternal)>len(rank):
-				for i in range(1, len(Maternal)-len(rank)+1):
-					Maternal.pop(Maternal.index(rank[-i]))
-
-		generate(200)
-		cou=0
-		st1=0
-		while 1:
-			total=0
-			Roulette=Maternal.copy()
-			for e in Roulette:
-				total+=e[1]
-			for i in range(len(Roulette)):
-				Roulette[i][1]/=total
-			crossover(20, sorted(Roulette, key=lambda kv: -kv[1]))
-
-			if sorted(Maternal, key=lambda kv: -kv[1])[0][1]-st1<0.0001:
-				cou+=1
-			else:
-				st1=sorted(Maternal, key=lambda kv: -kv[1])[0][1]
-				cou=0
-			if cou>10:
-				break
-		xi=sorted(Maternal, key=lambda kv: -kv[1])[0][0]
-
-		return xi
-
-	tasks=gen_task()
+	tasks=gen_task(users)
 	
 	if method=='SS':
 		QoS=caltech(tasks, iterative(tasks))
@@ -312,14 +61,308 @@ def cal_profit(users, current, action, method):
 		cost=(abs(current-action)+2)*1.5+action*3
 	else:
 		cost=action*3
-	#cost=action*3.25
 
 	#profit
 	return revenue-cost
 
+def cal_cost(users, current, action, method):
+	global F
+	F=140*(action+1)/10
+
+	if current==action:
+		cost=(abs(current-action)+2)*1.5+action*3
+	else:
+		cost=action*3
+
+	return cost
+
+def cal_revenue(users, current, action, method):
+	global F
+	F=140*(action+1)/10
+
+	tasks=gen_task(users)
+	
+	if method=='SS':
+		QoS=caltech(tasks, iterative(tasks))
+	elif method=='greedy':
+		QoS=caltech(tasks, greedy(tasks))
+	elif method=='PSO':
+		QoS=caltech(tasks, PSO(tasks))
+	elif method=='GA':
+		QoS=caltech(tasks, GA_x(tasks))
+	elif method=='FLE':
+		QoS=caltech(tasks, [0]*len(tasks))
+	elif method=='FRE':
+		QoS=caltech(tasks, [1]*len(tasks))
+
+	revenue=users*QoS*2.675
+
+	return revenue
+
+def caltech(tasks, xi):
+	reward=0
+	users=len(tasks)
+	en=[1]*users
+
+	b=[0]*users
+	f=[0]*users
+
+	#sum of sqrt
+	ss=[0]*(MEC+1)
+	for k,v in tasks.items():
+		ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
+		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+	for k,v in tasks.items():
+		#cal lagrange b
+		if ss[0]>0:
+			b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
+		#cal lagrange f
+		if ss[en[k]]>0:
+			f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
+	for k,v in tasks.items():
+		if xi[k]>0:
+			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
+		else:
+			t=v['d']/v['fl']
+
+		if t<v['Tm']:
+			reward+=v['pri']*(1-t/(v['Tm']) )
+		else:
+			reward-=v['pri']*0.5
+
+	return reward/users
+
+def iterative(tasks):
+	xi=list()
+	users=len(tasks)
+	b=[0]*users
+	f=[0]*users
+	en=[1]*users
+
+	for e in tasks.values():
+		xi.append( 1-min(1, e['Tm']*e['fl']/e['d']) )
+
+	#sum of sqrt
+	ss=[0]*(MEC+1)
+	for k,v in tasks.items():
+		ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
+		ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
+		
+	for k,v in tasks.items():
+		#cal lagrange b
+		if ss[0]>0:
+			b[k]=(((v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
+		#cal lagrange f
+		if ss[en[k]]>0:
+			f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
+	i=0
+	while i<10:
+		#update x
+		for k,v in tasks.items():
+			xi[k]=v['d']/v['fl']/( v['a']/(b[k]*log2(1+v['SINR'])) + v['d']/f[k] + v['d']/v['fl'] )
+
+		#sum of sqrt
+		ss=[0]*(MEC+1)
+		for k,v in tasks.items():
+			ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
+			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+		for k,v in tasks.items():
+			#cal lagrange b
+			if ss[0]>0:
+				b[k]=(((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
+			#cal lagrange f
+			if ss[en[k]]>0:
+				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
+		i+=1
+
+	return xi
+
+def greedy(tasks):
+	users=len(tasks)
+	xi=[0]*users
+	tasks_s=sorted(tasks.items(), key=lambda kv: kv[1]['pri']/(kv[1]['d']/kv[1]['Tm']))
+
+	for e in tasks_s:
+		buf=xi.copy()
+		buf[e[0]]=1
+		if caltech(tasks, buf)>caltech(tasks, xi):
+			xi=buf
+		else:
+			break
+	return xi
+
+def PSO(tasks):
+	users=len(tasks)
+	particles=200
+	#a single particle (solution vector)
+	decision=list()
+	#particle's v
+	velocity=list()
+
+	#initialize
+	for i in range(particles):
+		decision.append([])
+		velocity.append([])
+		for j in range(users):
+			if np.random.rand()<15/users:
+				decision[i].append(np.random.rand())
+				velocity[i].append(np.random.uniform(0.5,0.5))
+			else:
+				decision[i].append(0)
+				velocity[i].append(0)
+
+		#for j in range(users):
+		#	decision[i].append(np.random.randint(1,MEC+1))
+
+	#each particle's history
+	history=list()
+	for i in range(particles):
+		history.append([decision[i],-100])
+	glob_best=[decision[-1],-100]
+		
+	cou=0
+	while cou<10:
+		#cal fitness & update
+		best=glob_best[1]
+		for i in range(particles):
+
+			value=caltech(tasks, decision[i])
+			if value > history[i][1]:
+				history[i][0]=decision[i]
+				history[i][1]=value
+			if value > glob_best[1]:
+				glob_best[0]=decision[i]
+				glob_best[1]=value
+
+		if best==glob_best[1]:
+			cou+=1
+		else:
+			cou=0
+
+		#update velocity & position
+		for i in range(particles):
+			for j in range(users):
+				velocity[i][j]=velocity[i][j]+0.001*(history[i][0][j]-decision[i][j])+0.001*(glob_best[0][j]-decision[i][j])
+				decision[i][j]+=velocity[i][j]
+				if decision[i][j]>1:
+					decision[i][j]=1
+				if decision[i][j]<0:
+					decision[i][j]=0
+
+	return glob_best[0]
+
+def GA_x(tasks):
+	users=len(tasks)
+	Maternal=list()
+	table=list()
+	def generate(size):
+		for a in range(size):
+			xi=list()
+			for b in range(users):
+				if np.random.rand()<15/users:
+					xi.append(np.random.rand())
+				else:
+					xi.append(0)
+
+			table.append(xi)
+			Maternal.append([xi, caltech(tasks, xi)])
+
+	def crossover(pairs, rank):
+		parent=list()
+		for e in range(2*pairs):
+			a=np.random.rand()
+			if a<rank[0][1]:
+				parent.append(rank[0][0])
+			else:
+				accu=rank[0][1]
+				for i in range(1, len(rank)):
+					if a>accu and a<accu+rank[i][1]:
+						parent.append(rank[i][0])
+						break
+					else:
+						accu+=rank[i][1]
+
+		while len(parent)>2:
+			a=parent.pop()
+			b=parent.pop()
+			start=np.random.randint(len(a))
+			end=np.random.randint(start,len(a))
+
+			aa,bb=list(),list()
+			for j in range(users):
+				if j not in range(start, end):
+					aa.append(a[j])
+					bb.append(b[j])
+				else:
+					aa.append(b[j])
+					bb.append(a[j])
+
+			if aa not in table:
+				table.append(aa)
+				Maternal.append([aa, caltech(tasks,aa)])
+			if bb not in table:
+				table.append(bb)
+				Maternal.append([bb, caltech(tasks,bb)])
+
+			if np.random.rand()<0.16:
+				muta1, muta2=list(), list()
+				tar=np.random.randint(len(aa))
+				for i in range(len(aa)):
+					if i!=tar:
+						muta1.append(aa[i])
+						muta2.append(bb[i])
+					else:
+						muta1.append(np.random.rand())
+						muta2.append(np.random.rand())
+				if muta1 not in table:
+					table.append(muta1)
+					Maternal.append([muta1, caltech(tasks,muta1)])
+				if muta2 not in table:
+					table.append(muta2)
+					Maternal.append([muta2, caltech(tasks,muta2)])
+
+		if len(Maternal)>len(rank):
+			for i in range(1, len(Maternal)-len(rank)+1):
+				Maternal.pop(Maternal.index(rank[-i]))
+
+	generate(200)
+	cou=0
+	st1=0
+	while 1:
+		total=0
+		Roulette=Maternal.copy()
+		for e in Roulette:
+			total+=e[1]
+		for i in range(len(Roulette)):
+			Roulette[i][1]/=total
+		crossover(20, sorted(Roulette, key=lambda kv: -kv[1]))
+
+		if sorted(Maternal, key=lambda kv: -kv[1])[0][1]-st1<0.0001:
+			cou+=1
+		else:
+			st1=sorted(Maternal, key=lambda kv: -kv[1])[0][1]
+			cou=0
+		if cou>10:
+			break
+	xi=sorted(Maternal, key=lambda kv: -kv[1])[0][0]
+
+	return xi
+
+#Q table
+def init():
+	for i in range(history, len(traffic)):
+		for a in range(actions):
+			Q[str([a]+traffic[i-history:i])]=dict()
+			for b in range(actions):
+				Q[str([a]+traffic[i-history:i])][b]=0
 #DRL
 def DQL():
-	Q=dict()
+	global Q
 	exp_x, exp_y=list(), list()
 
 	#DNN
@@ -329,13 +372,6 @@ def DQL():
 	DNN.add(Dense(actions))
 	DNN.compile(loss='mse', optimizer='adam', metrics=['mse'])
 	DNN.summary()
-
-	def init():
-		for i in range(history, len(traffic)):
-			for a in range(actions):
-				Q[str([a]+traffic[i-history:i])]=dict()
-				for b in range(actions):
-					Q[str([a]+traffic[i-history:i])][b]=0
 
 	#agent explore env 一個episode
 	def play(episode):
@@ -413,6 +449,8 @@ def DQL():
 
 
 	def final():
+		global Realtime
+		Realtime='GA'
 		profit=list()
 		current=0
 
@@ -422,10 +460,10 @@ def DQL():
 			action=DNN.predict(np.array([state]))[0]
 			action=list(action).index(max(action))
 
-			profit.append(cal_profit(traffic[i+1], current, action, Realtime)/traffic[i+1])
+			profit.append(cal_revenue(traffic[i+1], current, action, Realtime)/traffic[i+1])
 			current=action
 
-		return profit
+		return sum(profit)
 
 	def main():
 
@@ -437,34 +475,27 @@ def DQL():
 			play(episode)
 			print(episode)
 			#test revenue
-			if episode%5==0:
+			'''if episode%5==0:
 				x.append(episode)
-				result.append(exam(episode))
+				result.append(exam(episode))'''
 			
 			episode+=1
 
-		print(result)
+		print(final())
+		print('GA')
+		'''print(result)
 		plt.plot(x,result,"go-",label='DQN')
 		plt.xlabel("epochs")
 		plt.ylabel("unit_profit")
 		plt.legend()
 		plt.savefig('unit_profit_DQN.jpg', dpi=600, bbox_inches='tight')
-		plt.show()
+		plt.show()'''
 
 	main()
 
-
 #純QL, 
 def QL():
-	Q=dict()
-
-	#Q table
-	def init():
-		for i in range(history, len(traffic)):
-			for a in range(actions):
-				Q[str([a]+traffic[i-history:i])]=dict()
-				for b in range(actions):
-					Q[str([a]+traffic[i-history:i])][b]=0
+	global Q
 
 	#一個episode
 	def play(episode):
@@ -520,6 +551,8 @@ def QL():
 		return sum(profit)/len(traffic)
 
 	def final():
+		global Realtime
+		Realtime='PSO'
 		profit=list()
 		current=0
 
@@ -533,13 +566,12 @@ def QL():
 			if best==0:
 				action=np.random.randint(actions)
 
-			profit.append(cal_profit(traffic[i+1], current, action, Realtime)/traffic[i+1])
+			profit.append(cal_cost(traffic[i+1], current, action, Realtime)/traffic[i+1])
 			current=action
 
-		return profit
+		return sum(profit)
 
 	def main():
-		
 		init()
 		x, result=list(), list()
 		episode=0
@@ -548,12 +580,14 @@ def QL():
 			play(episode)
 			print(episode)
 			#test revenue
-			if episode%5==0:
+			'''if episode%5==0:
 				x.append(episode)
-				result.append(exam())
+				result.append(exam())'''
 			episode+=1
 
-		print(result)
+		print(final())
+		print('PSO')
+		'''print(result)
 		plt.plot(x,result,"go-",label='QL')
 		plt.plot(result,"go-",label='QL')
 		plt.xlabel("epochs")
@@ -561,7 +595,7 @@ def QL():
 		plt.ylabel("unit_profit")
 		plt.legend()
 		plt.savefig('unit_profit_QL.jpg', dpi=600, bbox_inches='tight')
-		plt.show()
+		plt.show()'''
 
 	main()
 
@@ -570,16 +604,16 @@ def ARIMA():
 	model=arima_model.ARIMA(traffic, order=(history, 0, 0))
 	model=model.fit(disp=-1)
 	current=0
-	for a in range(500):
+	for a in range(1):
 		profit=list()
 		for i in range(history, len(traffic)-2):
 			action=max(int(model.predict(start=i, end=i)[0]*10/63), 1)
 			for e in range(num):
-				profit.append(cal_profit(traffic[i+1], current, action, Realtime)/traffic[i+1]/num)
+				profit.append(cal_revenue(traffic[i+1], current, action, Realtime)/traffic[i+1]/num)
 			current=action
 		print(a)
 	
-		result.append(sum(profit)/len(traffic))
+		result.append(sum(profit))
 	print(result)
 	'''plt.plot(profit,"go-",label='ARIMA')
 	plt.xlabel("Time (hours)")
@@ -651,21 +685,41 @@ def draw_bar():
 	method=['SS', 'GA', 'PSO', 'Greedy', 'FLE', 'FRE']
 	x=np.arange(len(method))
 	W=0.3
-	DQL=[0.4774*302, 0.230882*302, 0.138*302, 0.1227*302, -0.095*302, -0.278*302]
-	QL=[0.46*302, 0.15736*302, 0.09343*302, 0.08336*302, -0.095*302, -0.454*302]
-	ARIMA=[0.32284*302, -0.015*302, -0.11173*302, -0.125*302, -0.095*302, -0.57*302]
+	#profit
+	#DQL=[0.4774*302, 0.230882*302, 0.138*302, 0.1227*302, -0.095*302, -0.278*302]
+	#QL=[0.46*302, 0.15736*302, 0.09343*302, 0.08336*302, -0.095*302, -0.454*302]
+	#ARIMA=[0.32284*302, -0.015*302, -0.11173*302, -0.125*302, -0.095*302, -0.57*302]
+	
+	#revenue -95.8453
+	#DQL=[324.9341, 222.46, 199.24, 175, -0.095*302, 170]
+	#QL=[313.1467, 206.325, 174.73, 158.736, -0.095*302, 78.05]
+	#ARIMA=[337.202, 227.656, 205.9487, 200.68, -0.095*302, 62.385]
+	
+	#cost
+	DQL=[166.47, 152.73, 157.766, 137.4358, 0, 249.503]
+	QL=[174.3704, 158.78, 145.8044, 133.56128, 0, 215.1587]
+	ARIMA=[239.3652878, 239.3652878, 239.3652878, 239.3652878, 0, 239.3652878]
+
+	#自己算的profit
+	#DQL=[158.43, 69.76, 41.474, 37.5642, -0.095*302, -79.5]
+	#QL=[138.7763, 47.545, 28.9256, 25.17472, -0.095*302, -137.108]
+	#ARIMA=[97.8367122, -11.7092878, -33.4163, -38.685, -0.095*302, -171.98]
 	plt.bar(x, DQL, W, color='g', label='DQL')
 	plt.bar(x+W, QL, W, color='b', label='QL')
 	plt.bar(x+W+W, ARIMA, W, color='r', label='ARIMA')
 	plt.xticks(x+W, method)
-	plt.ylabel("Profit")
+	#plt.ylabel("Profit")
+	#plt.ylabel("Revenue")
+	plt.ylabel("Cost")
 	plt.legend()
-	plt.savefig('Profit.jpg', dpi=600, bbox_inches='tight')
+	#plt.savefig('Profit.jpg', dpi=600, bbox_inches='tight')
+	#plt.savefig('Revenue.jpg', dpi=600, bbox_inches='tight')
+	plt.savefig('Cost.jpg', dpi=600, bbox_inches='tight')
 	plt.show()
 
 #ARIMA()
 #DQL()
-#draw_bar()
+draw_bar()
 #draw_learning()
 
 #4/8: QL, DQL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
@@ -673,3 +727,5 @@ def draw_bar():
 #4/23:新增ARIMA
 #8/2: 參數 F=120*(action+1)*2/10 revenue=users*QoS*2 cost=(abs(current-action)*2+2)*3
 #8/3: DQN: SS 0.4774 greedy 0.1227, FRE -0.278, QL: SS 0.46, greedy: 0.08336 FRE -0.454, ARIMA: SS 0.32284, greedy -0.125, -0.57 *302
+#8/5: Cost: DQN: SS 166.47, GA 235.154, PSO 182.766, greedy 125.4358, FRE 249.503. QL SS 197.3704, GA 194.78, PSO 186.80443512588863, greedy 184.577, FLE 451.46, FRE 215.1587. ARIMA SS [239.3652878], 全同
+#revenue: DQN: SS 324.9341, GA 222.46, PSO 199.24, greedy 175, FRE 170. QL SS 313.1467, GA 206.3250297754979, PSO 174.7294283700954, greedy 178.736, FLE -95.8453, FRE 54.018. ARIMA SS [337.202], greedy [205.9487], PSO [200.68], GA [227.656], FRE [62.385]
