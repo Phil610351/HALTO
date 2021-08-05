@@ -127,17 +127,13 @@ def iterative(tasks):
 	ss=[0]*(MEC+1)
 	for k,v in tasks.items():
 		ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-	for k,v in tasks.items():
 		ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
 
-	#cal lagrange b
 	for k,v in tasks.items():
+		#cal lagrange b
 		if ss[0]>0:
 			b[k]=(((v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
-
-	#cal lagrange f
-	for k,v in tasks.items():
+		#cal lagrange f
 		if ss[en[k]]!=0:
 			f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
@@ -151,18 +147,15 @@ def iterative(tasks):
 		ss=[0]*(MEC+1)
 		for k,v in tasks.items():
 			ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
-
-		for k,v in tasks.items():
 			ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
 
-		#cal lagrange b
 		for k,v in tasks.items():
+			#cal lagrange b
 			if ss[0]>0:
 				b[k]=(((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0])
 
-		#cal lagrange f
-		for k,v in tasks.items():
-			if ss[en[k]]!=0:
+			#cal lagrange f
+			if ss[en[k]]>0:
 				f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
 		i+=1
@@ -466,8 +459,6 @@ def draw_beta():
 	plt.savefig('beta_imp.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-
-#print(test())
 draw_beta()
 
 #8/1重新開工

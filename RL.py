@@ -666,7 +666,7 @@ def draw_bar():
 #ARIMA()
 #DQL()
 #draw_bar()
-draw_learning()
+#draw_learning()
 
 #4/8: QL, DQL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
 #4/9: 跑圖完成

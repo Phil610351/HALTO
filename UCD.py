@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=10
+users=12
 B=1
 N=1e-10
-F=100
+F=102
 num=20
 x_num=7
-MEC=1
+MEC=3
 prob=10
 
 def gen_task():
@@ -60,54 +60,200 @@ def caltech(tasks, xi):
 
 	return reward/users
 
-def optimal():
-	for i in range(3**8):
-		a=i
-		en=list()
-		while a!=0:
-			en.append(a%3)
-			a/=3
-		print(i,en)
-		print('\n')
-	return
+def cal_reward(tasks, xi, en):
+	reward=0
 
-def optimal2(tasks):
+	b=[0]*users
+	f=[0]*users
+
+	#sum of sqrt
+	ss=[0]*(MEC+1)
+	for k,v in tasks.items():
+		ss[0]+=(xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
+		ss[en[k]]+=(xi[k]*v['d']*v['pri']/v['Tm'])**0.5
+
+	for k,v in tasks.items():
+		#cal lagrange b
+		if ss[0]>0:
+			b[k]=((xi[k]*v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5)*B/ss[0]
+		#cal lagrange f
+		if ss[en[k]]>0:
+			f[k]=((xi[k]*v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
+
+	for k,v in tasks.items():
+		if xi[k]>0:
+			t=max( (1-xi[k])*v['d']/v['fl'], xi[k]*v['a']/b[k]/log2(1+v['SINR']) + xi[k]*v['d']/f[k] )
+		else:
+			t=v['d']/v['fl']
+
+		if t<v['Tm']:
+			reward+=v['pri']*(1-t/(v['Tm']) )
+		else:
+			reward-=v['pri']*0.5
+
+	return reward/users
+
+def optimal(tasks, xi):
+	global F
+	F=34
+
 	M_d=[0,0]
-	def search(state, decision):
-		if len(decision)==len(state):
-			r=caltech(state, decision)
+
+	def search(tasks, xi, en):
+		#print(en)
+		if len(en)==len(tasks):
+			r=cal_reward(tasks, xi, en)
 			if r>M_d[0]:
 				M_d[0]=r
-				M_d[1]=decision
+				M_d[1]=en
 			return
 
-		if len(decision)==int(len(state)/2):
-			r=cal_reward(state, decision)
-			if r<M_d[0]/2.4:
-				return
-
 		for i in range(1, MEC+1):
-			search(state, decision+str(i))
+			search(tasks, xi, en + [i])
 
-	search(state, '')
-	action=[0]*(users*(MEC+1))
-	for i in range(users):
-		action[i*(MEC+1)+int(M_d[1][i])]=1
-	return M_d[1], action
+	search(tasks, xi, [])
+
+	return M_d[0], M_d[1]
+
+def entropy(tasks, xi):
+	global F
+	F=34
+
+	en=[1]*users
+	tasks_s=sorted(tasks.items(), key=lambda kv: -kv[1]['pri'] )
+	
+	for e in tasks_s:
+		#base & current solution
+		M_d=[cal_reward(tasks, xi, en), en]
+		
+		for i in range(1+1, MEC+1):
+			temp=en.copy()
+			temp[e[0]]=i
+			r=cal_reward(tasks, xi, temp)
+			if r>M_d[0]:
+				M_d[0]=r
+				M_d[1]=temp
+		en=M_d[1]
+
+	return cal_reward(tasks, xi, en), en
+
+def random(tasks, xi):
+	global F
+	F=34
+	en=list()
+	for e in range(users):
+		en.append(np.random.randint(1, MEC+1))
+	return cal_reward(tasks, xi, en)
+
+def GA_en(tasks, xi):
+	global F
+	F=34
+	Maternal=list()
+	table=list()
+
+	def generate(size):
+		for a in range(size):
+			en=list()
+			for b in range(users):
+				en.append(np.random.randint(1,MEC+1))
+
+			table.append(en)
+			Maternal.append([en, cal_reward(tasks, xi, en)])
+
+	def crossover(pairs, rank):
+		parent=list()
+		for e in range(2*pairs):
+			a=np.random.rand()
+			if a<rank[0][1]:
+				parent.append(rank[0][0])
+			else:
+				accu=rank[0][1]
+				for i in range(1, len(rank)):
+					if a>accu and a<accu+rank[i][1]:
+						parent.append(rank[i][0])
+						break
+					else:
+						accu+=rank[i][1]
+
+		while len(parent)>2:
+			a=parent.pop()
+			b=parent.pop()
+			start=np.random.randint(len(a))
+			end=np.random.randint(start,len(a))
+
+			aa,bb=list(),list()
+			for j in range(users):
+				if j not in range(start, end):
+					aa.append(a[j])
+					bb.append(b[j])
+				else:
+					aa.append(b[j])
+					bb.append(a[j])
+
+			if aa not in table:
+				table.append(aa)
+				Maternal.append([aa, cal_reward(tasks, xi, aa)])
+			if bb not in table:
+				table.append(bb)
+				Maternal.append([bb, cal_reward(tasks, xi, bb)])
+
+			if np.random.rand()<0.16:
+				muta1, muta2=list(), list()
+				tar=np.random.randint(len(aa))
+				for i in range(len(aa)):
+					if i!=tar:
+						muta1.append(aa[i])
+						muta2.append(bb[i])
+					else:
+						muta1.append(np.random.randint(1,MEC+1))
+						muta2.append(np.random.randint(1,MEC+1))
+				if muta1 not in table:
+					table.append(muta1)
+					Maternal.append([muta1, cal_reward(tasks, xi, muta1)])
+				if muta2 not in table:
+					table.append(muta2)
+					Maternal.append([muta2, cal_reward(tasks, xi, muta2)])
+
+		if len(Maternal)>len(rank):
+			for i in range(1, len(Maternal)-len(rank)+1):
+				Maternal.pop(Maternal.index(rank[-i]))
+
+	generate(200)
+	cou=0
+	st1=0
+	while 1:
+		total=0
+		Roulette=Maternal.copy()
+		for e in Roulette:
+			total+=e[1]
+		for i in range(len(Roulette)):
+			Roulette[i][1]/=total
+		crossover(20, sorted(Roulette, key=lambda kv: -kv[1]))
+		if sorted(Maternal, key=lambda kv: -kv[1])[0][1]-st1<0.0001:
+			cou+=1
+		else:
+			st1=sorted(Maternal, key=lambda kv: -kv[1])[0][1]
+			cou=0
+		if cou>10:
+			break
+
+	en=sorted(Maternal, key=lambda kv: -kv[1])[0][0]
+	return cal_reward(tasks, xi, en), en
 
 def iterative(tasks):
+	global F
+	F=102
+
 	xi=list()
 	b=[0]*users
 	f=[0]*users
-	en=list()
-	for i in range(users):
-		en.append(i%MEC+1)
+	en=[1]*users
 
 	for e in tasks.values():
 		xi.append( 1-min(1, e['Tm']*e['fl']/e['d']) )
 
 	#sum of sqrt
-	ss=[0]*(MEC+1)
+	ss=[0]*(2)
 	for k,v in tasks.items():
 		ss[0]+=(v['a']*v['pri']/(v['Tm']*log2(1+v['SINR'])) )**0.5
 		ss[en[k]]+=(v['d']*v['pri']/v['Tm'])**0.5
@@ -121,7 +267,7 @@ def iterative(tasks):
 			f[k]=((v['d']*v['pri']/v['Tm'])**0.5)*F/ss[en[k]]
 
 	i=0
-	while i<10:
+	while i<100:
 		#update x
 		for k,v in tasks.items():
 			xi[k]=v['d']/v['fl']/( v['a']/(b[k]*log2(1+v['SINR'])) + v['d']/f[k] + v['d']/v['fl'] )
@@ -240,19 +386,21 @@ def PSO(tasks):
 	return glob_best[0]
 
 def GA_x(tasks):
+	global F
+	F=102
 	Maternal=list()
 	table=list()
 	def generate(size):
 		for a in range(size):
-			decision=list()
+			xi=list()
 			for b in range(users):
-				if np.random.rand()<25/users:
-					decision.append(np.random.rand())
+				if np.random.rand()<10/users:
+					xi.append(np.random.rand())
 				else:
-					decision.append(0)
+					xi.append(0)
 
-			table.append(decision)
-			Maternal.append([decision, caltech(tasks, decision)])
+			table.append(xi)
+			Maternal.append([xi, caltech(tasks, xi)])
 
 	def crossover(pairs, rank):
 		parent=list()
@@ -334,108 +482,6 @@ def GA_x(tasks):
 	xi=sorted(Maternal, key=lambda kv: -kv[1])[0][0]
 
 	return xi
-
-def GA(tasks):
-	Maternal=dict()
-
-	def generate(size):
-		for a in range(size):
-			decision=list()
-			for b in range(users):
-				if np.random.rand()<10/users:
-					decision.append(np.random.rand())
-				else:
-					decision.append(0)
-
-			table.append(decision)
-			Maternal.append([decision, caltech(tasks, decision)])
-
-	def generate(size):
-		for a in range(size):
-			decision=''
-			for b in range(users):
-				if np.random.rand()<=0.25:
-					decision+='1'
-				else:
-					decision+='0'
-			Maternal[decision]=caltech(tasks, decision)
-
-	def crossover(pairs, rank):
-		parent=set()
-		for e in range(2*pairs):
-			a=np.random.rand()
-			if a<rank[0][1]:
-				parent.add(rank[0][0])
-			else:
-				accu=rank[0][1]
-				for i in range(1, len(rank)):
-					if a>accu and a<accu+rank[i][1]:
-						parent.add(rank[i][0])
-						break
-					else:
-						accu+=rank[i][1]
-
-		while len(parent)>2:
-			a=parent.pop()
-			b=parent.pop()
-			start=np.random.randint(len(a))
-			end=np.random.randint(start,len(a))
-			#if start>end:   start,end=end,start
-			aa,bb='',''
-			for j in range(start):
-				aa+=a[j]
-				bb+=b[j]
-			for j in range(start, end):
-				aa+=b[j]
-				bb+=a[j]
-			for j in range(end, len(a)):
-				aa+=a[j]
-				bb+=b[j]
-			if aa not in Maternal:
-				Maternal[aa]=caltech(tasks,aa)
-			if bb not in Maternal:
-				Maternal[bb]=caltech(tasks,bb)
-
-			if np.random.rand()<0.06:
-				muta1, muta2='', ''
-				tar=np.random.randint(len(aa))
-				for i in range(len(aa)):
-					if i!=tar:
-						muta1+=aa[i]
-						muta2+=bb[i]
-					else:
-						muta1+=str(np.random.randint(2))
-						muta2+=str(np.random.randint(2))
-				if muta1 not in Maternal:
-					Maternal[muta1]=caltech(tasks, muta1)
-				if muta2 not in Maternal:
-					Maternal[muta2]=caltech(tasks, muta2)
-
-		if len(Maternal)>len(rank):
-			for i in range(1, len(Maternal)-len(rank)+1):
-				Maternal.pop(rank[-i][0])
-
-	generate(100)
-	cou=0
-	st1=0
-	while 1:
-		total=0
-		Roulette=Maternal.copy()
-		for e in Roulette.values():
-			total+=e
-		for e in Roulette.keys():
-			Roulette[e]/=total
-		crossover(10, sorted(Roulette.items(), key=lambda kv: -kv[1]))
-		if st1==sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]:
-			cou+=1
-		else:
-			st1=sorted(Maternal.items(), key=lambda kv: -kv[1])[0][1]
-			cou=0
-		if cou>7:
-			break
-	decision=sorted(Maternal.items(), key=lambda kv: -kv[1])[0][0]
-
-	return cal_reward(tasks,decision)
 
 def test():
 	perform=[0]*6
@@ -571,7 +617,30 @@ def draw_beta():
 	plt.savefig('beta.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-optimal()
+def draw_optimal():
+	tasks=gen_task()
+	xi=iterative(tasks)
+	rSS, SS= entropy(tasks,xi)
+	print(rSS, SS)
+	rOPT, OPT=optimal(tasks,xi)
+	print(rOPT, OPT)
+	print((rOPT-rSS)/rOPT)
+	xi=GA_x(tasks)
+	rGA, GA=GA_en(tasks,xi)
+	print(rGA, GA)
+	print((rOPT-rGA)/rOPT)
+	xi=PSO(tasks)
+	rPSO, PSO=GA_en(tasks,xi)
+	print(rPSO, PSO, 'PSO')
+	xi=greedy(tasks)
+	RAN=random(tasks,xi)
+	print(RAN, (rOPT-RAN)/rOPT)
+	x=['optimal', 'SS', 'PSO', 'GA', 'greedy']
+	a=[0.5731757667479276, 0.5704970428153521, 0.54, 0.5109011906529753, 0.44350087376304836]
+	plt.bar(x,a, color=['r', 'g', 'b', 'm', 'y'])
+	plt.ylabel("Average Utility")
+	plt.savefig('OPT.jpg', dpi=600,bbox_inches='tight')
+	plt.show()
 
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 #2/25: iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty)
@@ -580,4 +649,4 @@ optimal()
 #4/8畫各alpha下的QoS值 B=0.1~1.3 QoS=0.3~0.5
 #7/30重新開工 更新alpha.jpg與多MEC
 #8/1 alpha圖: B=0.1, B+=0.3, F=100, users=40, beta圖: B=1, F=20, F+=20, users=40, user圖:
-#8/3 optimal
+#8/3 完成optimal
