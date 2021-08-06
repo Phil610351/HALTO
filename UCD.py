@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import log2
 
-users=12
+users=40
 B=1
 N=1e-10
-F=102
-num=20
+F=100
+num=100
 x_num=7
-MEC=3
+MEC=1
 prob=10
 
 def gen_task():
@@ -241,8 +241,6 @@ def GA_en(tasks, xi):
 	return cal_reward(tasks, xi, en), en
 
 def iterative(tasks):
-	global F
-	F=102
 
 	xi=list()
 	b=[0]*users
@@ -386,15 +384,13 @@ def PSO(tasks):
 	return glob_best[0]
 
 def GA_x(tasks):
-	global F
-	F=102
 	Maternal=list()
 	table=list()
 	def generate(size):
 		for a in range(size):
 			xi=list()
 			for b in range(users):
-				if np.random.rand()<10/users:
+				if np.random.rand()<prob/users:
 					xi.append(np.random.rand())
 				else:
 					xi.append(0)
@@ -496,36 +492,6 @@ def test():
 
 	return perform
 
-def draw_users():
-	global users
-	global prob
-	x=list()
-	result=list()
-	for e in range(6):
-		result.append([])
-
-	for e in range(x_num):
-		perform=test()
-		x.append(users)
-		for i in range(6):
-			result[i].append(perform[i])
-
-		print(users)
-		users+=10
-
-	plt.plot(x,result[5],"go-",label='SS')
-	plt.plot(x,result[4],"b*-",label='PSO')
-	plt.plot(x,result[3],"ks-",label='GA')
-	plt.plot(x,result[2],"yD-",label='Greedy')
-	plt.plot(x,result[1],"rp-",label='FRE')
-	plt.plot(x,result[0],"cx-",label='FLE')
-	plt.xlabel("Number of users")
-	plt.ylabel("Average utility")
-	plt.legend()
-	#plt.savefig('servers.png', dpi = 600, bbox_inches='tight')
-	plt.savefig('QoS.jpg', dpi = 600, bbox_inches='tight')
-	plt.show()
-
 def draw_avg():
 	global avg
 
@@ -555,10 +521,46 @@ def draw_avg():
 	plt.savefig('Tm.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
+def draw_users():
+	#result=[[-0.10689215350174067, -0.12258751955370198, -0.10664938851603122, -0.10914649076739066, -0.10352928516081307, -0.11127262145823709, -0.11005122844295091], [0.5598836536425962, 0.36792046928941746, 0.1649824545931375, -0.10109683084887193, -0.28177171302590576, -0.3590176136757609, -0.37326622068182996], [0.5598964288522993, 0.34955962066748136, 0.21763963785257454, 0.13635219564725318, 0.09686138192362795, 0.052573965820916654, 0.026589646026615635], [0.5216173876758898, 0.40404328923329014, 0.31663210920423096, 0.24558096638413635, 0.192273764101235, 0.1277150637090219, 0.07557143521468176], [0.5598836536425962, 0.3527461792501668, 0.22769903483542914, 0.14634974843610654, 0.10359187562921575, 0.06347987540291242, 0.040366798345693726], [0.5966541623574921, 0.4902104750325136, 0.42170249237138857, 0.3646301289171351, 0.32061896540159845, 0.2731650095641522, 0.23237548736062189]]
+	global users
+	global prob
+	x=list()
+	result=list()
+	for e in range(6):
+		result.append([])
+
+	for e in range(x_num):
+		perform=test()
+		x.append(users)
+		for i in range(6):
+			result[i].append(perform[i])
+
+		print(users)
+		users+=10
+
+	print('users', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
+	plt.plot(x,result[4],"b*-",label='PSO')
+	plt.plot(x,result[3],"ks-",label='GA')
+	plt.plot(x,result[2],"yD-",label='Greedy')
+	plt.plot(x,result[1],"rp-",label='FRE')
+	plt.plot(x,result[0],"cx-",label='FLE')
+	plt.xlabel("Number of users")
+	plt.ylabel("Average utility")
+	plt.legend()
+	plt.savefig('QoS.jpg', dpi = 600, bbox_inches='tight')
+	plt.show()
+
 def draw_alpha():
 	global users
 	global B
+	global F
 	global prob
+	users=40
+	B=0.1
+	F=100
+
 	x=[0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]
 
 	result=list()
@@ -573,8 +575,9 @@ def draw_alpha():
 		print(B)
 		B+=0.3
 		prob+=2
-		
-	plt.plot(x,result[5],"go-",label='SS')
+
+	print('alpha', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
 	plt.plot(x,result[4],"b*-",label='PSO')
 	plt.plot(x,result[3],"ks-",label='GA')
 	plt.plot(x,result[2],"yD-",label='Greedy')
@@ -589,7 +592,11 @@ def draw_alpha():
 def draw_beta():
 	global users
 	global F
+	global B
 	global prob
+	users=40
+	B=1
+	F=20
 	x=[0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]
 
 	result=list()
@@ -604,8 +611,9 @@ def draw_beta():
 		print(F)
 		F+=20
 		prob+=2
-		
-	plt.plot(x,result[5],"go-",label='SS')
+	
+	print('beta', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
 	plt.plot(x,result[4],"b*-",label='PSO')
 	plt.plot(x,result[3],"ks-",label='GA')
 	plt.plot(x,result[2],"yD-",label='Greedy')
@@ -618,7 +626,7 @@ def draw_beta():
 	plt.show()
 
 def draw_optimal():
-	tasks=gen_task()
+	'''tasks=gen_task()
 	xi=iterative(tasks)
 	rSS, SS= entropy(tasks,xi)
 	print(rSS, SS)
@@ -634,14 +642,15 @@ def draw_optimal():
 	print(rPSO, PSO, 'PSO')
 	xi=greedy(tasks)
 	RAN=random(tasks,xi)
-	print(RAN, (rOPT-RAN)/rOPT)
-	x=['optimal', 'SS', 'PSO', 'GA', 'greedy']
+	print(RAN, (rOPT-RAN)/rOPT)'''
+	x=['Optimal', 'The Proposed', 'PSO', 'GA', 'greedy']
 	a=[0.5731757667479276, 0.5704970428153521, 0.54, 0.5109011906529753, 0.44350087376304836]
 	plt.bar(x,a, color=['r', 'g', 'b', 'm', 'y'])
 	plt.ylabel("Average Utility")
 	plt.savefig('OPT.jpg', dpi=600,bbox_inches='tight')
 	plt.show()
 
+draw_optimal()
 #2/24: iterative/greedy:1.08, iterative/GA:1.18 ,
 #2/25: iterative/GA_x:1.22, iterative/GA: 1.18 (both no penalty)
 #2/28: iterative/PSO:1.21, iterative/greedy: 1.57

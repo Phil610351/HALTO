@@ -4,12 +4,12 @@ import requests
 import json
 from math import log2
 
-users=40
+users=10
 B=1
 N=1e-10
-F=20
+F=100
 avg=0.1
-num=50
+num=15
 x_num=7
 MEC=1
 prob=10
@@ -57,11 +57,11 @@ def cal_real(tasks, xi):
 
 	for k,v in tasks.items():
 		if xi[k]>0:
-			#load=dict()
-			#load['round']=int(xi[k]*v['d']*100)
-			#r=requests.post('http://35.236.175.215:80', data = json.dumps(load))
-			#tiex=json.loads(r.text)['t']/5.25/f[k]
-			tiex=xi[k]*v['d']*fs[action]*0.0135/f[k]
+			load=dict()
+			load['round']=int(xi[k]*v['d']*100)
+			r=requests.post('http://35.236.175.215:80', data = json.dumps(load))
+			tiex=json.loads(r.text)['t']/5.27/f[k]
+			#tiex=xi[k]*v['d']*fs[action]*0.0135/f[k]
 			#print((1-xi[k])*v['d']/v['fl'], tiex)
 			titx=xi[k]*v['a']/b[k]/log2(1+v['SINR'])
 			t=max((1-xi[k])*v['d']/v['fl'], tiex+titx)
@@ -182,7 +182,7 @@ def GA_x(tasks):
 		for a in range(size):
 			decision=list()
 			for b in range(users):
-				if np.random.rand()<prob/users:
+				if np.random.rand()<25/users:
 					decision.append(np.random.rand())
 				else:
 					decision.append(0)
@@ -339,33 +339,6 @@ def test():
 		
 	return perform
 
-def draw_users():
-	global users
-	x=list()
-	result=list()
-	for e in range(6):
-		result.append([])
-
-	for e in range(x_num):
-		perform=test()
-		x.append(users)
-		for i in range(6):
-			result[i].append(perform[i])
-		print(users)
-		users+=10
-
-	plt.plot(x,result[5],"go-",label='SS')
-	plt.plot(x,result[4],"b*-",label='PSO')
-	plt.plot(x,result[3],"ks-",label='GA')
-	plt.plot(x,result[2],"yD-",label='Greedy')
-	plt.plot(x,result[1],"rp-",label='FRE')
-	plt.plot(x,result[0],"cx-",label='FLE')
-	plt.xlabel("Number of users")
-	plt.ylabel("Average utility")
-	plt.legend()
-	plt.savefig('QoS_imp.jpg', dpi = 600, bbox_inches='tight')
-	plt.show()
-
 def draw_avg():
 	global avg
 
@@ -395,10 +368,52 @@ def draw_avg():
 	plt.savefig('Tm.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
+def draw_users():
+	#[[-0.0560508543470955, -0.10232465113244134, -0.08640974215979584, -0.10710901409832328, -0.11701713688781498, -0.10427602351274189, -0.09746809895744712], [0.548330167484117, 0.3653749717294511, 0.1768105388819655, -0.10271013881293471, -0.30076116751519966, -0.3590444674082899, -0.3728112232960363], [0.5484052377587394, 0.3437210604302775, 0.18770637488011946, 0.09592393671138162, 0.027454697703110265, 0.009635876510567265, -0.0025874877668921447], [0.5084444599247216, 0.40346103604543243, 0.32688844161312286, 0.24020588553937477, 0.17849576879610227, 0.1285555842597195, 0.07409804858965259], [0.5484031817144704, 0.3581137583822125, 0.24268856218335222, 0.1448008236867084, 0.08426471425537715, 0.06177033436629506, 0.04645799788399567], [0.5844750504728554, 0.4874066022708568, 0.4296211836404238, 0.3629855676683852, 0.29489952781163703, 0.2606597573873945, 0.23213894889176406]]	
+	global users
+	global B
+	global F
+
+	users=10
+	B=1
+	F=100
+
+	x=list()
+	result=list()
+	for e in range(6):
+		result.append([])
+
+	for e in range(x_num):
+		perform=test()
+		x.append(users)
+		for i in range(6):
+			result[i].append(perform[i])
+		print(users)
+		users+=10
+
+	print('users', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
+	plt.plot(x,result[4],"b*-",label='PSO')
+	plt.plot(x,result[3],"ks-",label='GA')
+	plt.plot(x,result[2],"yD-",label='Greedy')
+	plt.plot(x,result[1],"rp-",label='FRE')
+	plt.plot(x,result[0],"cx-",label='FLE')
+	plt.xlabel("Number of users")
+	plt.ylabel("Average utility")
+	plt.legend()
+	plt.savefig('QoS_imp.jpg', dpi = 600, bbox_inches='tight')
+	plt.show()
+
 def draw_alpha():
 	global users
 	global B
+	global F
 	global prob
+
+	users=40
+	B=0.1
+	F=100
+
 	x=[0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]
 
 	result=list()
@@ -414,7 +429,8 @@ def draw_alpha():
 		B+=0.3
 		prob+=2
 
-	plt.plot(x,result[5],"go-",label='SS')
+	print('alpha', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
 	plt.plot(x,result[4],"b*-",label='PSO')
 	plt.plot(x,result[3],"ks-",label='GA')
 	plt.plot(x,result[2],"yD-",label='Greedy')
@@ -427,10 +443,16 @@ def draw_alpha():
 	plt.show()
 
 def draw_beta():
+	#x=[[-0.10879866106844496, -0.11725025079956199, -0.10660510841711787, -0.11307704027337126, -0.10846732152428108, -0.10475123288444127, -0.10961808048181076], [-0.3749322977885126, -0.3771214321787286, -0.3563549649219013, -0.18841551556259342, -0.10790901209306714, -0.011781798089643171, 0.07373219562962838], [-0.06064481973306977, -0.018508742744827476, 0.021803399810650333, 0.05989479993998011, 0.08219146589725494, 0.10981912346140983, 0.1347166412008365], [-0.07544592302405732, -0.022176138334315636, 0.08976727156335386, 0.16292029465350574, 0.210722604423403, 0.24865832198388652, 0.263096845846362], [-0.10681923867930895, 0.009741945141403549, 0.0801422701583021, 0.14517171688614863, 0.16103560178069748, 0.1920991471197749, 0.21557720297242255], [0.04185391797899397, 0.19519541692279052, 0.268333364296298, 0.3322189081800225, 0.3584201158200735, 0.3833790799939305, 0.4025883589486936]]
 	global users
 	global F
 	global prob
 	global action
+
+	users=40
+	B=1
+	F=20
+
 	x=[0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 1.0]
 
 	result=list()
@@ -446,8 +468,9 @@ def draw_beta():
 		action+=1
 		prob+=2
 		F+=20
-		
-	plt.plot(x,result[5],"go-",label='SS')
+	
+	print('beta', result)
+	plt.plot(x,result[5],"go-",label='The Proposed')
 	plt.plot(x,result[4],"b*-",label='PSO')
 	plt.plot(x,result[3],"ks-",label='GA')
 	plt.plot(x,result[2],"yD-",label='Greedy')
@@ -459,6 +482,4 @@ def draw_beta():
 	plt.savefig('beta_imp.jpg', dpi = 600, bbox_inches='tight')
 	plt.show()
 
-draw_beta()
-
-#8/1重新開工
+draw_users()
