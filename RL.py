@@ -360,6 +360,7 @@ def init():
 			Q[str([a]+traffic[i-history:i])]=dict()
 			for b in range(actions):
 				Q[str([a]+traffic[i-history:i])][b]=0
+
 #DRL
 def DQL():
 	global Q
@@ -697,14 +698,14 @@ def draw_bar():
 	#SS=[0.4774*302, 0.46*302, 0.32284*302]
 	#greedy=[0.1227*302, 0.08336*302, -0.125*302]
 	#FRE=[-0.278*302, -0.454*302, -0.57*302]
-	method=['The Proposed', 'GA', 'PSO', 'Greedy', 'FLE', 'FRE']
+	method=['The Proposed (AO)', 'GA', 'PSO', 'Greedy', 'FLE', 'FRE']
 	x=np.arange(len(method))
 	W=0.3
 	
 	#profit
-	#DQL=[0.4774*302, 0.230882*302, 0.138*302, 0.1227*302, -0.095*302, -0.278*302]
-	#QL=[0.46*302, 0.15736*302, 0.09343*302, 0.08336*302, -0.095*302, -0.454*302]
-	#ARIMA=[0.32284*302, -0.015*302, -0.11173*302, -0.125*302, -0.095*302, -0.57*302]
+	DQL=[0.4774*302, 0.230882*302, 0.138*302, 0.1227*302, -0.095*302, -0.278*302]
+	QL=[0.46*302, 0.15736*302, 0.09343*302, 0.08336*302, -0.095*302, -0.454*302]
+	ARIMA=[0.32284*302, -0.015*302, -0.11173*302, -0.125*302, -0.095*302, -0.57*302]
 	
 	#revenue -95.8453
 	#DQL=[324.9341, 222.46, 199.24, 175, -0.095*302, 170]
@@ -712,9 +713,9 @@ def draw_bar():
 	#ARIMA=[337.202, 227.656, 205.9487, 200.68, -0.095*302, 62.385]
 	
 	#cost
-	DQL=[166.47, 152.73, 157.766, 137.4358, 0, 249.503]
-	QL=[174.3704, 158.78, 145.8044, 133.56128, 0, 215.1587]
-	ARIMA=[239.3652878, 239.3652878, 239.3652878, 239.3652878, 0, 239.3652878]
+	#DQL=[166.47, 152.73, 157.766, 137.4358, 0, 249.503]
+	#QL=[174.3704, 158.78, 145.8044, 133.56128, 0, 215.1587]
+	#ARIMA=[239.3652878, 239.3652878, 239.3652878, 239.3652878, 0, 239.3652878]
 
 	#自己算的profit
 	#DQL=[158.43, 69.76, 41.474, 37.5642, -0.095*302, -79.5]
@@ -724,13 +725,13 @@ def draw_bar():
 	plt.bar(x+W, QL, W, color='b', label='Q-Learning')
 	plt.bar(x+W+W, ARIMA, W, color='r', label='ARIMA')
 	plt.xticks(x+W, method)
-	#plt.ylabel("Profit")
-	plt.ylabel("Revenue")
+	plt.ylabel("Profit")
+	#plt.ylabel("Revenue")
 	#plt.ylabel("Cost")
 	plt.legend()
-	#plt.savefig('Profit.jpg', dpi=600, bbox_inches='tight')
+	plt.savefig('Profit.jpg', dpi=600, bbox_inches='tight')
 	#plt.savefig('Revenue.jpg', dpi=600, bbox_inches='tight')
-	plt.savefig('Cost.jpg', dpi=600, bbox_inches='tight')
+	#plt.savefig('Cost.jpg', dpi=600, bbox_inches='tight')
 	plt.show()
 
 #ARIMA()
