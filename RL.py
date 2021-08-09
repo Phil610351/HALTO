@@ -637,7 +637,7 @@ def draw_learning():
 	plt.plot(x,DQN,"go-",label='The Proposed')
 	plt.plot(x,QL,"bo-",label='Q-Learning')
 	#plt.plot(x,ARIMA,"ko-",label='ARIMA')
-	plt.xlabel("epochs")
+	plt.xlabel("episodes")
 	plt.ylabel("unit profit")
 	plt.legend()
 	plt.savefig('learning.jpg', dpi=600, bbox_inches='tight')
@@ -736,8 +736,8 @@ def draw_bar():
 
 #ARIMA()
 #QL()
-draw_bar()
-#draw_learning()
+#draw_bar()
+draw_learning()
 #draw_realtime()
 
 #4/8: QL, DQL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5

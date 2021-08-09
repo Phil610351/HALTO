@@ -642,10 +642,17 @@ def draw_optimal():
 	print(rPSO, PSO, 'PSO')
 	xi=greedy(tasks)
 	RAN=random(tasks,xi)
-	print(RAN, (rOPT-RAN)/rOPT)'''
-	x=['Optimal', 'The Proposed', 'PSO', 'GA', 'greedy']
-	a=[0.5731757667479276, 0.5704970428153521, 0.54, 0.5109011906529753, 0.44350087376304836]
-	plt.bar(x,a, color=['r', 'g', 'b', 'm', 'y'])
+	print(RAN, (rOPT-RAN)/rOPT)
+
+	tasks=gen_task()
+	xi=[0]*users
+	print(random(tasks,xi))
+	xi=[1]*users
+	print(random(tasks,xi))'''
+
+	x=['Opt', 'The Proposed', 'PSO', 'GA', 'greedy', 'FLE', 'FRE']
+	a=[0.5731757667479276, 0.5704970428153521, 0.54, 0.5109011906529753, 0.44350087376304836, -0.10186141054581883, -0.37017025939914894]
+	plt.bar(x,a, color=['r', 'g', 'b', 'm', 'y', 'k', 'c'])
 	plt.ylabel("Average Utility")
 	plt.savefig('OPT.jpg', dpi=600,bbox_inches='tight')
 	plt.show()
