@@ -670,7 +670,7 @@ def draw_realtime():
 	plt.xlabel("Time (hours)")
 	#plt.ylabel("Profit per slice request")
 	#plt.ylabel("Revenue per slice request")
-	#plt.ylabel("Cost per slice request")
+	plt.ylabel("Cost per slice request")
 	plt.legend()
 	#plt.savefig('Prealtime.jpg', dpi=600, bbox_inches='tight')
 	#plt.savefig('Rrealtime.jpg', dpi=600, bbox_inches='tight')
@@ -737,8 +737,8 @@ def draw_bar():
 #ARIMA()
 #QL()
 #draw_bar()
-draw_learning()
-#draw_realtime()
+#draw_learning()
+draw_realtime()
 
 #4/8: QL, DQL done, traffic range 2~50, for 0.3, revenue=0.6~15*5, for 1.3, revenue=1~25*5
 #4/9: 跑圖完成
